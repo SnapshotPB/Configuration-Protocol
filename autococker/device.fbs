@@ -1,0 +1,31 @@
+namespace com.snapshotpb.configuration.protocol;
+
+enum ProfileId:byte {
+    ONE,
+    TWO,
+    THREE,
+    FOUR,
+}
+
+/*
+Device state information
+*/
+table Device {
+    /*
+    The 16 byte UUID device ID
+    */
+    device_id:[byte];
+
+    /*
+    Index ID of the currently active profile. This is a value between 0 and 3.
+    */
+    active_profile:ProfileId;
+
+    /*
+    Flag indicating if the board has enabled its lockout. A board in lockout can not be modified
+    until the lockout has been disabled from hardware switch.
+    */
+    lockout_enabled:bool;
+}
+
+root_type Device;
