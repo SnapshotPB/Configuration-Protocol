@@ -48,7 +48,7 @@ message Profile {
 
     // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
     // if the value is below this threshold.
-    uint16 eye_threshold = 6;
+    uint32 eye_threshold = 6;
 
     // The amount of time in tenths of a millisecond the eye must be within threshold to determine a
     // ball is in the breach
