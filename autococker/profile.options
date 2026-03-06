@@ -1,4 +1,5 @@
 // Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-Profie.name max_size:255
+Profile.name max_size:255
+Profiles.profiles max_count:4
