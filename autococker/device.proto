@@ -1,0 +1,25 @@
+// Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0. 
+// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+// Protocol definition for device data 
+
+syntax = "proto3";
+
+enum ProfileId {
+  ONE = 0;
+  TWO = 1;
+  THREE = 2;
+  FOUR = 3;
+}
+
+message Device {
+    // The 16 byte UUID device ID
+    bytes device_id = 1;
+
+    // Index ID of the currently active profile. This is a value between 0 and 3.
+    ProfileId active_profile = 2;
+
+    // Flag indicating if the board has enabled its lockout. A board in lockout can not be modified
+    // until the lockout has been disabled from hardware switch.
+    bool lockout_enabled = 3;
+}

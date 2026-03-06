@@ -1,0 +1,98 @@
+// Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0. 
+// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+// A profile defining a user configuration for the marker
+
+syntax = "proto3";
+
+enum ProfileType {
+    DEFAULT = 0;
+    CUSTOM = 1;
+}
+
+enum FireMode {
+    MECHANICAL = 0;
+    SEMI = 1;
+    TRIGGER_ONLY = 2;
+    FULL_AUTO = 3;
+    THREE_SHOT_BURST = 4;
+    RAMPING_PSP = 5;
+    RAMPING_MILLENNIUM = 6;
+    RAMPING_CUSTOM = 7;
+}
+
+enum EyeMode {
+    OFF = 0;
+    REFLECTIVE = 1;
+    BREAK_BEAM = 2;
+}
+
+
+// A profile defining a user configuration for the marker
+message Profile {
+    // Name for the given profile limited to 10 ASCII characters (0-255)
+    string name = 1;
+
+    // Identifier for client to understand granularity of control the user prefers
+    ProfileType type = 2;
+
+    // User preferred fire mode
+    FireMode fire_mode = 3;
+
+    // A maximum firerate for the marker. `cockingSolenoidDwellClosed` will be artificially increased
+    // if the fire rate is lower than the calculated cycle time.
+    uint32 fire_rate_cap = 4;
+
+    // Eye mode the marker supports if any
+    EyeMode eye_mode = 5;
+
+    // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
+    // if the value is below this threshold.
+    uint16 eye_threshold = 6;
+
+    // The amount of time in tenths of a millisecond the eye must be within threshold to determine a
+    // ball is in the breach
+    uint32 eye_debounce = 7;
+
+    // The amount of time in tenths of a millisecond the sear solenoid will be energized during the
+    // firing cycle
+    uint32 sear_solenoid_dwell = 8;
+
+    // The amount of time in tenths of a millisecond the cocking solenoid waits after a trigger pull
+    // before energizing
+    uint32 cocking_solenoid_delay = 9;
+
+    // The amount of time in tenths of a millisecond the cocking solenoid will energize to open the
+    // breach. When using an eye sensor, this setting is ignored.
+    uint32 cocking_solenoid_dwell_open = 10;
+
+    // The amount of time in tenths of a millisecond the cocking solenoid will stay deenergized to close
+    // the breach and prevent the next firing cycle
+    uint32 cocking_solenoid_dwell_closed = 11;
+
+    // The percentage (divided by ten) of increase to the current fire rate once
+    // `rampingCustomTriggerPulls` criteria has been met. ie 3 trigger pulls at a multiplier value of
+    // 25 (250%) will target a fire rate of 7.5 balls per second. Trigger pulls are counted in a
+    // rolling one-second window so fire rate will increase and decrease relative to consistent trigger
+    // rate.
+    uint32 ramping_custom_multiplier = 12;
+
+    // The number of trigger pulls required in a one-second window to enter ramping for the following
+    // one second.
+    uint32 ramping_custom_trigger_pulls = 13;
+
+    // A minimum rate of fire in ramping mode regardless of trigger pulls in the rolling window.
+    uint32 ramping_custom_rof_minimum = 14;
+
+    // The amount of time in tenths of a millisecond the trigger must be pulled to begin a firing
+    // cycle.
+    uint32 trigger_debouce_on = 15;
+
+    // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
+    // `triggerDebounceOn` cycle.
+    uint32 trigger_debouce_off = 16;
+}
+
+message Profiles {
+    repeated Profile profiles = 1;
+}
