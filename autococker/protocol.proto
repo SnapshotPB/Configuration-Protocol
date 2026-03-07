@@ -1,0 +1,13 @@
+// Wrapper message for the autococker message protocol.
+
+syntax = "proto3";
+
+import "device.proto";
+import "profile.proto";
+
+message Message {
+    oneof payload {
+        Device device = 1;
+        Profiles profiles = 2;
+    }
+}
