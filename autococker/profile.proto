@@ -86,11 +86,11 @@ message Profile {
 
     // The amount of time in tenths of a millisecond the trigger must be pulled to begin a firing
     // cycle.
-    uint32 trigger_debouce_on = 15;
+    uint32 trigger_debounce_on = 15;
 
     // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
     // `triggerDebounceOn` cycle.
-    uint32 trigger_debouce_off = 16;
+    uint32 trigger_debounce_off = 16;
 }
 
 message Profiles {
