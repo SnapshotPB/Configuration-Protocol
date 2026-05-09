@@ -40,6 +40,17 @@ enum EyeMode {
     BREAK_BEAM = 2;
 }
 
+enum ScreenBrightness {
+  // Minimal brightness, lowest power consumption.
+  LOW = 0;
+
+  // Default brightness
+  DEFAULT = 1;
+
+  // Maximum brightness, highest power consumption.
+  HIGH = 2;
+}
+
 // A profile defining a user configuration for the marker
 message Profile {
     // Name for the given profile limited to 10 ASCII characters (0-255)
@@ -106,7 +117,10 @@ message Profile {
 
     // The amount of time in minutes for the board to automatically shut off without trigger or button 
     // interactions.
-    uint32 board_auto_off = 10;
+    uint32 board_auto_off = 17;
+
+    // Device setting for how bright the screen should be.
+    ScreenBrightness screen_brightness = 18;
 }
 
 message Profiles {
