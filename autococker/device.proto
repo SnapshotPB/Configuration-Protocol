@@ -5,6 +5,7 @@
 
 syntax = "proto3";
 
+// Record for the slot ID of the profile.
 enum ProfileId {
   ONE = 0;
   TWO = 1;
