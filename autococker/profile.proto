@@ -11,14 +11,27 @@ enum ProfileType {
 }
 
 enum FireMode {
+    // Replicate the functionality of a mechanical autococker. Pulling the trigger will engage the sear 
+    // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
+    // while the trigger is released. Trigger configuration still applies for determining position.
     MECHANICAL = 0;
+
+    // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with
+    // the limit being the shortest value of either marker timing or BPS cap
     SEMI = 1;
+
+    // For a pump marker, the cocking solenoid will never be triggered. Sear, trigger, and eyes are
+    // still applicable.
     TRIGGER_ONLY = 2;
+
+    // Fires with the limit being the shortest value of either marker timing or BPS cap
     FULL_AUTO = 3;
-    THREE_SHOT_BURST = 4;
-    RAMPING_PSP = 5;
-    RAMPING_MILLENNIUM = 6;
-    RAMPING_CUSTOM = 7;
+
+    // Ramping mode using NXL rules as defined for the 2026 season. 10.5BPS max rate of fire
+    // requiring a trigger pull rate of 5 pulls per second or higher at 200ms determination
+    // intervals.
+    // https://www.nxlpaintball.com/divisional-x-ball-rulebook
+    RAMPING_NXL_2026 = 4;
 }
 
 enum EyeMode {
@@ -27,6 +40,16 @@ enum EyeMode {
     BREAK_BEAM = 2;
 }
 
+enum ScreenBrightness {
+  // Minimal brightness, lowest power consumption.
+  LOW = 0;
+
+  // Default brightness
+  DEFAULT = 1;
+
+  // Maximum brightness, highest power consumption.
+  HIGH = 2;
+}
 
 // A profile defining a user configuration for the marker
 message Profile {
@@ -91,6 +114,13 @@ message Profile {
     // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
     // `triggerDebounceOn` cycle.
     uint32 trigger_debounce_off = 16;
+
+    // The amount of time in minutes for the board to automatically shut off without trigger or button 
+    // interactions.
+    uint32 board_auto_off = 17;
+
+    // Device setting for how bright the screen should be.
+    ScreenBrightness screen_brightness = 18;
 }
 
 message Profiles {
