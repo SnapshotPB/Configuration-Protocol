@@ -42,13 +42,13 @@ enum EyeMode {
 
 enum ScreenBrightness {
   // Minimal brightness, lowest power consumption.
-  LOW = 0;
+  SCREEN_BRIGHTNESS_LOW = 0;
 
   // Default brightness
-  DEFAULT = 1;
+  SCREEN_BRIGHTNESS_DEFAULT = 1;
 
   // Maximum brightness, highest power consumption.
-  HIGH = 2;
+  SCREEN_BRIGHTNESS_HIGH = 2;
 }
 
 // A profile defining a user configuration for the marker
