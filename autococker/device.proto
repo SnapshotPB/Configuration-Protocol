@@ -23,4 +23,7 @@ message Device {
     // Flag indicating if the board has enabled its lockout. A board in lockout can not be modified
     // until the lockout has been disabled from hardware switch.
     bool lockout_enabled = 3;
+
+    // Text displayed briefly when the board is turned on. Defaults to SnapshotPB.
+    bytes boot_text = 4;
 }
