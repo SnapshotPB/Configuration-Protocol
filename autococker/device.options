@@ -2,3 +2,4 @@
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 Device.device_id max_size:16
+Device.boot_text max_size:10
