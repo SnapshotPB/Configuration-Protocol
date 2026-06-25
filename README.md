@@ -9,25 +9,27 @@ describes how an app reads and writes a board's device state and user profiles.
 
 ## Project structure
 
-All schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`. The versioned
-package (`v1`) means future incompatible revisions land in a new package (`v2`) without
-breaking existing consumers.
+All schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`. **`v1` is
+pre-release:** until the first tagged release it may be renumbered and reshaped freely to
+keep the schema clean. Once `v1` is released, incompatible revisions will land in a new
+package (`v2`) instead, leaving existing consumers untouched.
 
 | File | Purpose |
 | --- | --- |
 | `protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
-| `device.proto` | `Device` — full per-board read state (device id, active profile, lockout, boot text); `DeviceConfig` — the app-writable subset (active profile, boot text); and the `ProfileId` slot enum. |
+| `device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model) and the `BoardModel` enum. |
+| `device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text), plus the `ProfileId` slot enum. |
 | `profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
 | `autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. |
-| `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.Device.boot_text`. |
+| `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.DeviceConfig.boot_text`. |
 
 ### Message model
 
 ```
 Message
 └── oneof payload
-    ├── Device         // full board state, reported by the board (read)
-    ├── DeviceConfig   // app-writable subset of device settings (write)
+    ├── Device         // board-owned state, reported only (device_id, lockout, model)
+    ├── DeviceConfig   // app-configurable settings (active_profile, boot_text)
     └── Profiles       // repeated Profile (max 4)
         └── Profile
             ├── generic fields (name, type, fire_rate_cap, board_auto_off, screen_brightness)
@@ -35,9 +37,10 @@ Message
                 └── AutocockerConfig   // board-model-specific firing config
 ```
 
-`Device` is the full state the board **reports**; `DeviceConfig` is the
-**app-writable** subset. Board-owned fields (`device_id`, `lockout_enabled`) are
-deliberately omitted from `DeviceConfig` so a client write cannot alter them.
+`Device` carries board-owned state the app can only read (`device_id`,
+`lockout_enabled`, `model`). `DeviceConfig` holds the app-configurable settings
+(`active_profile`, `boot_text`) and is the only device message a client writes;
+the read-only fields don't exist on it, so they can't be altered.
 
 ## Open approach to board types
 
@@ -70,12 +73,16 @@ open to new board types without disturbing existing ones:
 - Generic settings stay in one place and are reused by every board model.
 - A client/firmware switches on which arm is set to know how to interpret the
   configuration; an unset oneof means no board-specific config is present.
+- A board advertises which model it is via `Device.model` (`BoardModel` in
+  `device.proto`). Each `BoardModel` value pairs one-to-one with a `board_config` arm,
+  so a board's type is known without inspecting a profile, and every profile on that
+  board is expected to use the matching arm.
 - Field numbers are append-only — new arms take the next unused number and old ones
   are never reused (vacated tags are `reserved`).
 
 ### Example: adding a board type
 
-Suppose we want to support a spool-valve marker. Add a new board model in three steps.
+Suppose we want to support a spool-valve marker. Add a new board model in four steps.
 
 **1. Define the board's config message in its own file** — `snapshotpb/v1/spool.proto`:
 
@@ -109,7 +116,19 @@ import "snapshotpb/v1/spool.proto";
     }
 ```
 
-**3. (Optional) add nanopb constraints** for any bounded `bytes`, `string`, or
+**3. Add the matching `BoardModel` value** in `device.proto`, so a board can declare it
+is this model. Keep it paired one-to-one with the new `board_config` arm:
+
+```proto
+// device.proto
+enum BoardModel {
+  BOARD_MODEL_UNSPECIFIED = 0;
+  BOARD_MODEL_AUTOCOCKER = 1;
+  BOARD_MODEL_SPOOL = 2;
+}
+```
+
+**4. (Optional) add nanopb constraints** for any bounded `bytes`, `string`, or
 `repeated` fields in a matching `snapshotpb/v1/spool.options` file, with fully
 qualified keys, e.g.:
 
@@ -148,7 +167,9 @@ buf lint
 buf breaking --against '.git#branch=main'
 ```
 
-Intentional breaking changes should be made in a new version package (e.g. `snapshotpb.v2`)
+While `v1` is pre-release, breaking changes are made directly in `v1` and the `buf breaking`
+step is expected to fail — it is informational until the first tagged release. After `v1`
+is tagged, intentional breaking changes go in a new version package (e.g. `snapshotpb.v2`)
 rather than mutating `v1`.
 
 ## License

@@ -13,7 +13,8 @@ board-type model.
 All schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`:
 
 - `protocol.proto` — top-level `Message` wrapper (`oneof payload`).
-- `device.proto` — `Device` board state and the `ProfileId` enum.
+- `device.proto` — `Device` board-owned state and the `BoardModel` enum.
+- `device_config.proto` — `DeviceConfig` (the app-writable device settings) and the `ProfileId` enum.
 - `profile.proto` — `Profile`, `Profiles`, and the `board_config` oneof that selects a board model.
 - `autococker.proto` — `AutocockerConfig`, one arm of `board_config`.
 - `*.options` — nanopb field constraints (`max_size`, `max_count`) for fixed-size C structs.
@@ -27,14 +28,18 @@ The schema is held to buf `STANDARD` lint and `FILE`-level breaking checks
   (`import "snapshotpb/v1/<file>.proto";`).
 - Every enum has a zero value suffixed `_UNSPECIFIED` and all values prefixed with the
   enum name (e.g. `FIRE_MODE_UNSPECIFIED = 0`).
-- `.options` keys are fully qualified with the package (e.g. `snapshotpb.v1.Device.boot_text`).
+- `.options` keys are fully qualified with the package (e.g. `snapshotpb.v1.DeviceConfig.boot_text`).
 - New board models are added as new arms of the `board_config` oneof in `profile.proto`,
-  each in its own `*.proto`, using the next unused field number. Never reuse a field
-  number; reserve vacated tags and names.
+  each in its own `*.proto`, using the next unused field number, plus a matching
+  `BoardModel` value in `device.proto` (see the README's "adding a board type" example).
 - Bounded `bytes`/`string`/`repeated` fields must have a matching nanopb constraint in
   the corresponding `*.options` file so the firmware gets fixed-size structs.
-- Intentional breaking changes go in a new version package (`snapshotpb.v2`), not by
-  mutating `v1` — `buf breaking` will otherwise fail the build.
+- **`v1` is pre-release and unstable.** Until the first tagged release, fields may be
+  renumbered and messages reshaped freely to keep the schema clean; `buf breaking` is
+  expected to fail on these and the failure is informational (merge anyway). Once `v1` is
+  tagged, this reverses: never reuse a field number, `reserve` vacated tags and names, and
+  make intentional breaking changes in a new version package (`snapshotpb.v2`) rather than
+  mutating `v1`.
 
 ## Rules
 

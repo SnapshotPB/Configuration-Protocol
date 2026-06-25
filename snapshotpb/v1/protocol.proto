@@ -1,3 +1,8 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
+
 // Wrapper message for the SnapshotPB board configuration protocol.
 
 syntax = "proto3";
@@ -5,12 +10,18 @@ syntax = "proto3";
 package snapshotpb.v1;
 
 import "snapshotpb/v1/device.proto";
+import "snapshotpb/v1/device_config.proto";
 import "snapshotpb/v1/profile.proto";
 
+// Top-level envelope. Each exchange is a single Message carrying exactly one
+// payload; the set arm determines both the data and its direction:
+//   - Device:       reported by the board to clients (read-only state).
+//   - DeviceConfig: sent by a client to write device settings.
+//   - Profiles:     user profiles, read from or written to the board.
 message Message {
-    oneof payload {
-        Device device = 1;
-        Profiles profiles = 2;
-        DeviceConfig device_config = 3;
-    }
+  oneof payload {
+    Device device = 1;
+    Profiles profiles = 2;
+    DeviceConfig device_config = 3;
+  }
 }

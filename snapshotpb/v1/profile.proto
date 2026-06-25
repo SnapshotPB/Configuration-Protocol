@@ -12,9 +12,14 @@ package snapshotpb.v1;
 import "snapshotpb/v1/autococker.proto";
 
 enum ProfileType {
-    PROFILE_TYPE_UNSPECIFIED = 0;
-    PROFILE_TYPE_DEFAULT = 1;
-    PROFILE_TYPE_CUSTOM = 2;
+  // Unset / unknown profile type.
+  PROFILE_TYPE_UNSPECIFIED = 0;
+
+  // Simplified profile: the user prefers coarse, default control.
+  PROFILE_TYPE_DEFAULT = 1;
+
+  // Custom profile: the user wants fine-grained control over settings.
+  PROFILE_TYPE_CUSTOM = 2;
 }
 
 enum ScreenBrightness {
@@ -33,29 +38,30 @@ enum ScreenBrightness {
 
 // A profile defining a user configuration for the marker
 message Profile {
-    // Name for the given profile limited to 10 ASCII characters (0-255)
-    string name = 1;
+  // Name for the given profile limited to 10 ASCII characters (0-255)
+  string name = 1;
 
-    // Identifier for client to understand granularity of control the user prefers
-    ProfileType type = 2;
+  // Identifier for client to understand granularity of control the user prefers
+  ProfileType type = 2;
 
-    // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
-    // this cap.
-    uint32 fire_rate_cap = 3;
+  // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
+  // this cap.
+  uint32 fire_rate_cap = 3;
 
-    // The amount of time in minutes for the board to automatically shut off without trigger or button
-    // interactions.
-    uint32 board_auto_off = 4;
+  // The amount of time in minutes for the board to automatically shut off without trigger or button
+  // interactions.
+  uint32 board_auto_off = 4;
 
-    // Device setting for how bright the screen should be.
-    ScreenBrightness screen_brightness = 5;
+  // Device setting for how bright the screen should be.
+  ScreenBrightness screen_brightness = 5;
 
-    // Board-model-specific firing configuration. The set arm identifies the board model.
-    oneof board_config {
-        AutocockerConfig autococker = 6;
-    }
+  // Board-model-specific firing configuration. The set arm identifies the board model.
+  oneof board_config {
+    AutocockerConfig autococker = 6;
+  }
 }
 
+// The collection of user profiles stored on the board (max 4, see profile.options).
 message Profiles {
-    repeated Profile profiles = 1;
+  repeated Profile profiles = 1;
 }
