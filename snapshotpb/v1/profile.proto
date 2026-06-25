@@ -1,5 +1,7 @@
-// Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0.
-// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
 
 // A profile defining a user configuration for the marker
 
