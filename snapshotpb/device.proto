@@ -24,6 +24,6 @@ message Device {
     // until the lockout has been disabled from hardware switch.
     bool lockout_enabled = 3;
 
-    // Text displayed briefly when the board is turned on. Limited to 10 bytes. Defaults to SnapshotPB.
-    bytes boot_text = 4;
+    // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
+    string boot_text = 4;
 }
