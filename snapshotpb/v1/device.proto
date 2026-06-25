@@ -32,3 +32,14 @@ message Device {
     // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
     string boot_text = 4;
 }
+
+// App-writable subset of device settings. Board-owned, read-only fields
+// (device_id, lockout_enabled) are intentionally omitted so a client write
+// cannot alter them.
+message DeviceConfig {
+    // Slot ID of the profile to activate (PROFILE_ID_ONE through PROFILE_ID_FOUR).
+    ProfileId active_profile = 1;
+
+    // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
+    string boot_text = 2;
+}
