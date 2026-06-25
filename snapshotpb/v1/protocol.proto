@@ -2,8 +2,10 @@
 
 syntax = "proto3";
 
-import "device.proto";
-import "profile.proto";
+package snapshotpb.v1;
+
+import "snapshotpb/v1/device.proto";
+import "snapshotpb/v1/profile.proto";
 
 message Message {
     oneof payload {

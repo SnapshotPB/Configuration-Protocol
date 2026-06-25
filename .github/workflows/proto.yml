@@ -1,0 +1,42 @@
+name: Proto
+
+on:
+  pull_request:
+    paths:
+      - "**/*.proto"
+      - "buf.yaml"
+      - "buf.lock"
+      - ".github/workflows/proto.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  proto:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Build (validate compilation + imports)
+        run: buf build
+
+      - name: Lint
+        run: buf lint
+
+      - name: Detect breaking changes
+        env:
+          BASE: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          if git fetch --depth=1 origin "$BASE" \
+             && git cat-file -e "FETCH_HEAD:buf.yaml" 2>/dev/null; then
+            buf breaking --against "https://github.com/${REPO}.git#branch=${BASE}"
+          else
+            echo "::notice::No buf.yaml on base '${BASE}' yet — skipping breaking-change detection (baseline established once this merges)."
+          fi

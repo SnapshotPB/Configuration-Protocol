@@ -5,19 +5,22 @@
 
 syntax = "proto3";
 
+package snapshotpb.v1;
+
 // Record for the slot ID of the profile.
 enum ProfileId {
-  ONE = 0;
-  TWO = 1;
-  THREE = 2;
-  FOUR = 3;
+  PROFILE_ID_UNSPECIFIED = 0;
+  PROFILE_ID_ONE = 1;
+  PROFILE_ID_TWO = 2;
+  PROFILE_ID_THREE = 3;
+  PROFILE_ID_FOUR = 4;
 }
 
 message Device {
     // The 16 byte UUID device ID
     bytes device_id = 1;
 
-    // Index ID of the currently active profile. This is a value between 0 and 3.
+    // Slot ID of the currently active profile (PROFILE_ID_ONE through PROFILE_ID_FOUR).
     ProfileId active_profile = 2;
 
     // Flag indicating if the board has enabled its lockout. A board in lockout can not be modified

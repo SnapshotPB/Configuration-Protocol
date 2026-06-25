@@ -6,34 +6,40 @@
 
 syntax = "proto3";
 
+package snapshotpb.v1;
+
 enum FireMode {
+    // Unset / unknown fire mode.
+    FIRE_MODE_UNSPECIFIED = 0;
+
     // Replicate the functionality of a mechanical autococker. Pulling the trigger will engage the sear
     // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
     // while the trigger is released. Trigger configuration still applies for determining position.
-    MECHANICAL = 0;
+    FIRE_MODE_MECHANICAL = 1;
 
     // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with
     // the limit being the shortest value of either marker timing or BPS cap
-    SEMI = 1;
+    FIRE_MODE_SEMI = 2;
 
     // For a pump marker, the cocking solenoid will never be triggered. Sear, trigger, and eyes are
     // still applicable.
-    TRIGGER_ONLY = 2;
+    FIRE_MODE_TRIGGER_ONLY = 3;
 
     // Fires with the limit being the shortest value of either marker timing or BPS cap
-    FULL_AUTO = 3;
+    FIRE_MODE_FULL_AUTO = 4;
 
     // Ramping mode using NXL rules as defined for the 2026 season. 10.5BPS max rate of fire
     // requiring a trigger pull rate of 5 pulls per second or higher at 200ms determination
     // intervals.
     // https://www.nxlpaintball.com/divisional-x-ball-rulebook
-    RAMPING_NXL_2026 = 4;
+    FIRE_MODE_RAMPING_NXL_2026 = 5;
 }
 
 enum EyeMode {
-    OFF = 0;
-    REFLECTIVE = 1;
-    BREAK_BEAM = 2;
+    EYE_MODE_UNSPECIFIED = 0;
+    EYE_MODE_OFF = 1;
+    EYE_MODE_REFLECTIVE = 2;
+    EYE_MODE_BREAK_BEAM = 3;
 }
 
 // Autococker-specific firing mechanics: fire mode, eye sensing, solenoid timing,
