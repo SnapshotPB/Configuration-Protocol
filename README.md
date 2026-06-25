@@ -15,8 +15,8 @@ breaking existing consumers.
 
 | File | Purpose |
 | --- | --- |
-| `protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device` or `Profiles`). |
-| `device.proto` | `Device` — per-board state (device id, active profile, lockout, boot text) and the `ProfileId` slot enum. |
+| `protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
+| `device.proto` | `Device` — full per-board read state (device id, active profile, lockout, boot text); `DeviceConfig` — the app-writable subset (active profile, boot text); and the `ProfileId` slot enum. |
 | `profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
 | `autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. |
 | `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.Device.boot_text`. |
@@ -26,13 +26,18 @@ breaking existing consumers.
 ```
 Message
 └── oneof payload
-    ├── Device     // board state
-    └── Profiles   // repeated Profile (max 4)
-                   └── Profile
-                       ├── generic fields (name, type, fire_rate_cap, board_auto_off, screen_brightness)
-                       └── oneof board_config
-                           └── AutocockerConfig   // board-model-specific firing config
+    ├── Device         // full board state, reported by the board (read)
+    ├── DeviceConfig   // app-writable subset of device settings (write)
+    └── Profiles       // repeated Profile (max 4)
+        └── Profile
+            ├── generic fields (name, type, fire_rate_cap, board_auto_off, screen_brightness)
+            └── oneof board_config
+                └── AutocockerConfig   // board-model-specific firing config
 ```
+
+`Device` is the full state the board **reports**; `DeviceConfig` is the
+**app-writable** subset. Board-owned fields (`device_id`, `lockout_enabled`) are
+deliberately omitted from `DeviceConfig` so a client write cannot alter them.
 
 ## Open approach to board types
 
@@ -46,13 +51,13 @@ specific to a particular board model lives in its own message, selected through 
 message Profile {
     string name = 1;
     ProfileType type = 2;
-    uint32 fire_rate_cap = 4;
-    uint32 board_auto_off = 17;
-    ScreenBrightness screen_brightness = 18;
+    uint32 fire_rate_cap = 3;
+    uint32 board_auto_off = 4;
+    ScreenBrightness screen_brightness = 5;
 
     // Board-model-specific firing configuration. The set arm identifies the board model.
     oneof board_config {
-        AutocockerConfig autococker = 19;
+        AutocockerConfig autococker = 6;
     }
 }
 ```
@@ -91,7 +96,7 @@ message SpoolConfig {
 ```
 
 **2. Import it and add a new arm to the `board_config` oneof** in `profile.proto`,
-using the next unused field number (`autococker` is `19`, so `spool` is `20`):
+using the next unused field number (`autococker` is `6`, so `spool` is `7`):
 
 ```proto
 import "snapshotpb/v1/autococker.proto";
@@ -99,8 +104,8 @@ import "snapshotpb/v1/spool.proto";
 
 // ...
     oneof board_config {
-        AutocockerConfig autococker = 19;
-        SpoolConfig spool = 20;
+        AutocockerConfig autococker = 6;
+        SpoolConfig spool = 7;
     }
 ```
 

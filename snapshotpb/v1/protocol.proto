@@ -11,5 +11,6 @@ message Message {
     oneof payload {
         Device device = 1;
         Profiles profiles = 2;
+        DeviceConfig device_config = 3;
     }
 }

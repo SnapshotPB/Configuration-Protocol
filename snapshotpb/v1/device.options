@@ -5,3 +5,4 @@
 
 snapshotpb.v1.Device.device_id max_size:16
 snapshotpb.v1.Device.boot_text max_size:10
+snapshotpb.v1.DeviceConfig.boot_text max_size:10
