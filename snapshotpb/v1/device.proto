@@ -38,4 +38,9 @@ message Device {
   // The board model this hardware is built for. The board exclusively supports the
   // matching `board_config` arm — every Profile on this board must set that arm.
   BoardModel model = 3;
+
+  // Number of profile slots this board supports. Profiles are addressed 1-based, so
+  // valid DeviceConfig.active_profile values are 1..supported_profile_count. Stored as
+  // a uint8 in firmware (see device.options).
+  uint32 supported_profile_count = 4;
 }

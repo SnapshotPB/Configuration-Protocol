@@ -20,8 +20,8 @@ leaving existing consumers untouched.
 | File | Purpose |
 | --- | --- |
 | `v1/protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
-| `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model) and the `BoardModel` enum. |
-| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text), plus the `ProfileId` slot enum. |
+| `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
+| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text). |
 | `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
 | `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, ramping). |
@@ -33,7 +33,7 @@ leaving existing consumers untouched.
 ```
 Message
 └── oneof payload
-    ├── Device         // board-owned state, reported only (device_id, lockout, model)
+    ├── Device         // board-owned, read-only (device_id, lockout, model, profile count)
     ├── DeviceConfig   // app-configurable settings (active_profile, boot_text)
     └── Profiles       // repeated Profile (max 4)
         └── Profile
@@ -43,9 +43,9 @@ Message
 ```
 
 `Device` carries board-owned state the app can only read (`device_id`,
-`lockout_enabled`, `model`). `DeviceConfig` holds the app-configurable settings
-(`active_profile`, `boot_text`) and is the only device message a client writes;
-the read-only fields don't exist on it, so they can't be altered.
+`lockout_enabled`, `model`, `supported_profile_count`). `DeviceConfig` holds the
+app-configurable settings (`active_profile`, `boot_text`) and is the only device message a
+client writes; the read-only fields don't exist on it, so they can't be altered.
 
 ## Open approach to board types
 
