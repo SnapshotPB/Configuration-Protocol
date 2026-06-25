@@ -4,61 +4,23 @@
 // https://www.gnu.org/licenses/gpl-3.0.html
 
 // Autococker-specific firing configuration. Selected as a board model arm of the
-// `board_config` oneof in Profile.
+// `board_config` oneof in Profile (snapshotpb.v1).
 
 syntax = "proto3";
 
-package snapshotpb.v1;
+package snapshotpb.autococker.v1;
 
-enum FireMode {
-  // Unset / unknown fire mode.
-  FIRE_MODE_UNSPECIFIED = 0;
-
-  // Replicate the functionality of a mechanical autococker. Pulling the trigger will engage the sear
-  // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
-  // while the trigger is released. Trigger configuration still applies for determining position.
-  FIRE_MODE_MECHANICAL = 1;
-
-  // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with
-  // the limit being the shortest value of either marker timing or BPS cap
-  FIRE_MODE_SEMI = 2;
-
-  // For a pump marker, the cocking solenoid will never be triggered. Sear, trigger, and eyes are
-  // still applicable.
-  FIRE_MODE_TRIGGER_ONLY = 3;
-
-  // Fires with the limit being the shortest value of either marker timing or BPS cap
-  FIRE_MODE_FULL_AUTO = 4;
-
-  // Ramping mode using NXL rules as defined for the 2026 season. 10.5BPS max rate of fire
-  // requiring a trigger pull rate of 5 pulls per second or higher at 200ms determination
-  // intervals.
-  // https://www.nxlpaintball.com/divisional-x-ball-rulebook
-  FIRE_MODE_RAMPING_NXL_2026 = 5;
-}
-
-enum EyeMode {
-  // Unset / unknown eye mode.
-  EYE_MODE_UNSPECIFIED = 0;
-
-  // No eye sensing; the marker fires on timing alone.
-  EYE_MODE_OFF = 1;
-
-  // Reflective sensor: detects a ball by light bounced back from it.
-  EYE_MODE_REFLECTIVE = 2;
-
-  // Break-beam sensor: detects a ball by it interrupting a beam across the breach.
-  EYE_MODE_BREAK_BEAM = 3;
-}
+import "snapshotpb/autococker/v1/fire_mode.proto";
+import "snapshotpb/common/v1/eye_mode.proto";
 
 // Autococker-specific firing mechanics: fire mode, eye sensing, solenoid timing,
 // ramping, and trigger debounce.
 message AutocockerConfig {
   // User preferred fire mode
-  FireMode fire_mode = 1;
+  AutocockerFireMode fire_mode = 1;
 
   // Eye mode the marker supports if any
-  EyeMode eye_mode = 2;
+  snapshotpb.common.v1.EyeMode eye_mode = 2;
 
   // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
   // if the value is below this threshold.

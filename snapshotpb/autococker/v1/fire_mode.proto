@@ -1,0 +1,37 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
+
+// Fire modes specific to the autococker board.
+
+syntax = "proto3";
+
+package snapshotpb.autococker.v1;
+
+enum AutocockerFireMode {
+  // Unset / unknown fire mode.
+  AUTOCOCKER_FIRE_MODE_UNSPECIFIED = 0;
+
+  // Replicate the functionality of a mechanical autococker. Pulling the trigger will engage the sear
+  // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
+  // while the trigger is released. Trigger configuration still applies for determining position.
+  AUTOCOCKER_FIRE_MODE_MECHANICAL = 1;
+
+  // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with
+  // the limit being the shortest value of either marker timing or BPS cap
+  AUTOCOCKER_FIRE_MODE_SEMI = 2;
+
+  // For a pump marker, the cocking solenoid will never be triggered. Sear, trigger, and eyes are
+  // still applicable.
+  AUTOCOCKER_FIRE_MODE_TRIGGER_ONLY = 3;
+
+  // Fires with the limit being the shortest value of either marker timing or BPS cap
+  AUTOCOCKER_FIRE_MODE_FULL_AUTO = 4;
+
+  // Ramping mode using NXL rules as defined for the 2026 season. 10.5BPS max rate of fire
+  // requiring a trigger pull rate of 5 pulls per second or higher at 200ms determination
+  // intervals.
+  // https://www.nxlpaintball.com/divisional-x-ball-rulebook
+  AUTOCOCKER_FIRE_MODE_RAMPING_NXL_2026 = 5;
+}

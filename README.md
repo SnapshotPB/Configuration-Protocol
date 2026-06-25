@@ -9,18 +9,23 @@ describes how an app reads and writes a board's device state and user profiles.
 
 ## Project structure
 
-All schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`. **`v1` is
-pre-release:** until the first tagged release it may be renumbered and reshaped freely to
-keep the schema clean. Once `v1` is released, incompatible revisions will land in a new
-package (`v2`) instead, leaving existing consumers untouched.
+Core schema lives in package `snapshotpb.v1` under `snapshotpb/v1/` (file paths below are
+relative to `snapshotpb/`). Each board model lives in its own versioned sub-package
+(e.g. `snapshotpb.autococker.v1` under `snapshotpb/autococker/v1/`), and types shared
+across models live in `snapshotpb.common.v1`. **`v1` is pre-release:** until the first
+tagged release it may be renumbered and reshaped freely to keep the schema clean. Once
+released, incompatible revisions land in a new version package (e.g. `v2`) instead,
+leaving existing consumers untouched.
 
 | File | Purpose |
 | --- | --- |
-| `protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
-| `device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model) and the `BoardModel` enum. |
-| `device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text), plus the `ProfileId` slot enum. |
-| `profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
-| `autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. |
+| `v1/protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
+| `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model) and the `BoardModel` enum. |
+| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text), plus the `ProfileId` slot enum. |
+| `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
+| `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
+| `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, ramping). |
+| `common/v1/eye_mode.proto` | `EyeMode` — generic eye-sensing enum (off, reflective, break-beam) in the shared `snapshotpb.common.v1` package, reusable by any board model. |
 | `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.DeviceConfig.boot_text`. |
 
 ### Message model
@@ -60,7 +65,7 @@ message Profile {
 
     // Board-model-specific firing configuration. The set arm identifies the board model.
     oneof board_config {
-        AutocockerConfig autococker = 6;
+        snapshotpb.autococker.v1.AutocockerConfig autococker = 6;
     }
 }
 ```
@@ -68,9 +73,13 @@ message Profile {
 Because the board model is encoded as the *set arm* of the oneof, the protocol is
 open to new board types without disturbing existing ones:
 
-- Each board model owns its own `*.proto` config message, so unrelated models never
-  share or collide on field numbers.
+- Each board model lives in its own versioned sub-package and directory
+  (`snapshotpb/<model>/v1/`, package `snapshotpb.<model>.v1`), so models version
+  independently and never collide on field numbers.
 - Generic settings stay in one place and are reused by every board model.
+- Cross-cutting types reusable across board models (e.g. `EyeMode`) live in the shared
+  `snapshotpb.common.v1` package, so any model can import them without creating a
+  package import cycle.
 - A client/firmware switches on which arm is set to know how to interpret the
   configuration; an unset oneof means no board-specific config is present.
 - A board advertises which model it is via `Device.model` (`BoardModel` in
@@ -84,15 +93,16 @@ open to new board types without disturbing existing ones:
 
 Suppose we want to support a spool-valve marker. Add a new board model in four steps.
 
-**1. Define the board's config message in its own file** — `snapshotpb/v1/spool.proto`:
+**1. Define the board's config message in its own versioned sub-package** —
+`snapshotpb/spool/v1/spool.proto`:
 
 ```proto
 syntax = "proto3";
 
-package snapshotpb.v1;
+package snapshotpb.spool.v1;
 
 // Spool-valve-specific firing mechanics. Selected as a board model arm of the
-// `board_config` oneof in Profile.
+// `board_config` oneof in Profile (snapshotpb.v1).
 message SpoolConfig {
     // The amount of time in tenths of a millisecond the solenoid stays energized per shot.
     uint32 dwell = 1;
@@ -103,16 +113,17 @@ message SpoolConfig {
 ```
 
 **2. Import it and add a new arm to the `board_config` oneof** in `profile.proto`,
-using the next unused field number (`autococker` is `6`, so `spool` is `7`):
+using the next unused field number (`autococker` is `6`, so `spool` is `7`). Cross-package
+types are referenced fully-qualified:
 
 ```proto
-import "snapshotpb/v1/autococker.proto";
-import "snapshotpb/v1/spool.proto";
+import "snapshotpb/autococker/v1/autococker.proto";
+import "snapshotpb/spool/v1/spool.proto";
 
 // ...
     oneof board_config {
-        AutocockerConfig autococker = 6;
-        SpoolConfig spool = 7;
+        snapshotpb.autococker.v1.AutocockerConfig autococker = 6;
+        snapshotpb.spool.v1.SpoolConfig spool = 7;
     }
 ```
 
@@ -129,11 +140,11 @@ enum BoardModel {
 ```
 
 **4. (Optional) add nanopb constraints** for any bounded `bytes`, `string`, or
-`repeated` fields in a matching `snapshotpb/v1/spool.options` file, with fully
+`repeated` fields in a matching `snapshotpb/spool/v1/spool.options` file, with fully
 qualified keys, e.g.:
 
 ```
-snapshotpb.v1.SpoolConfig.some_label max_size:10
+snapshotpb.spool.v1.SpoolConfig.some_label max_size:10
 ```
 
 That's it — existing `autococker` profiles are unaffected, and clients that don't

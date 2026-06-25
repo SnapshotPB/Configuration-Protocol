@@ -9,7 +9,7 @@ syntax = "proto3";
 
 package snapshotpb.v1;
 
-import "snapshotpb/v1/autococker.proto";
+import "snapshotpb/autococker/v1/autococker.proto";
 
 enum ProfileType {
   // Unset / unknown profile type.
@@ -57,7 +57,7 @@ message Profile {
 
   // Board-model-specific firing configuration. The set arm identifies the board model.
   oneof board_config {
-    AutocockerConfig autococker = 6;
+    snapshotpb.autococker.v1.AutocockerConfig autococker = 6;
   }
 }
 
