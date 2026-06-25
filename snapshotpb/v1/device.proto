@@ -3,43 +3,44 @@
 // Licensed under the GNU General Public License v3.0. See the LICENSE file or
 // https://www.gnu.org/licenses/gpl-3.0.html
 
-// Protocol definition for device data 
+// Read-only device state reported by the board. Clients consume Device messages
+// but never write them; writable settings live in device_config.proto.
 
 syntax = "proto3";
 
 package snapshotpb.v1;
 
-// Record for the slot ID of the profile.
-enum ProfileId {
-  PROFILE_ID_UNSPECIFIED = 0;
-  PROFILE_ID_ONE = 1;
-  PROFILE_ID_TWO = 2;
-  PROFILE_ID_THREE = 3;
-  PROFILE_ID_FOUR = 4;
+// The board model a physical board is built for. Each value pairs one-to-one with
+// an arm of the `board_config` oneof in Profile (profile.proto). When adding a new
+// board model, add its `board_config` arm AND a matching value here — keep the two
+// in sync. See the README's "adding a board type" example.
+enum BoardModel {
+  // Unset / unknown board model.
+  BOARD_MODEL_UNSPECIFIED = 0;
+
+  // Autococker board — pairs with board_config.autococker (AutocockerConfig).
+  BOARD_MODEL_AUTOCOCKER = 1;
 }
 
+// Board-owned device state, reported by the board to its clients.
+//
+// READ-ONLY TO CLIENTS: every field is set by the board; clients only ever read
+// a Device and must never send one to change state. App-writable settings live
+// in DeviceConfig (device_config.proto), the only device message a client writes.
 message Device {
-    // The 16 byte UUID device ID
-    bytes device_id = 1;
+  // The 16 byte UUID device ID
+  bytes device_id = 1;
 
-    // Slot ID of the currently active profile (PROFILE_ID_ONE through PROFILE_ID_FOUR).
-    ProfileId active_profile = 2;
+  // Flag indicating if the board has enabled its lockout. A board in lockout can not be modified
+  // until the lockout has been disabled from hardware switch.
+  bool lockout_enabled = 2;
 
-    // Flag indicating if the board has enabled its lockout. A board in lockout can not be modified
-    // until the lockout has been disabled from hardware switch.
-    bool lockout_enabled = 3;
+  // The board model this hardware is built for. The board exclusively supports the
+  // matching `board_config` arm — every Profile on this board must set that arm.
+  BoardModel model = 3;
 
-    // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
-    string boot_text = 4;
-}
-
-// App-writable subset of device settings. Board-owned, read-only fields
-// (device_id, lockout_enabled) are intentionally omitted so a client write
-// cannot alter them.
-message DeviceConfig {
-    // Slot ID of the profile to activate (PROFILE_ID_ONE through PROFILE_ID_FOUR).
-    ProfileId active_profile = 1;
-
-    // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
-    string boot_text = 2;
+  // Number of profile slots this board supports. Profiles are addressed 1-based, so
+  // valid DeviceConfig.active_profile values are 1..supported_profile_count. Stored as
+  // a uint8 in firmware (see device.options).
+  uint32 supported_profile_count = 4;
 }

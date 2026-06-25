@@ -1,0 +1,25 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
+
+// Eye (ball-detection) sensing modes. Generic and reusable by any board model;
+// lives in the shared snapshotpb.common.v1 package to avoid a package import cycle.
+
+syntax = "proto3";
+
+package snapshotpb.common.v1;
+
+enum EyeMode {
+  // Unset / unknown eye mode.
+  EYE_MODE_UNSPECIFIED = 0;
+
+  // No eye sensing; the marker fires on timing alone.
+  EYE_MODE_OFF = 1;
+
+  // Reflective sensor: detects a ball by light bounced back from it.
+  EYE_MODE_REFLECTIVE = 2;
+
+  // Break-beam sensor: detects a ball by it interrupting a beam across the breach.
+  EYE_MODE_BREAK_BEAM = 3;
+}

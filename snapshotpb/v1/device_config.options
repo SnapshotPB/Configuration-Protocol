@@ -3,5 +3,5 @@
 // Licensed under the GNU General Public License v3.0. See the LICENSE file or
 // https://www.gnu.org/licenses/gpl-3.0.html
 
-snapshotpb.v1.Device.device_id max_size:16
-snapshotpb.v1.Device.supported_profile_count int_size:IS_8
+snapshotpb.v1.DeviceConfig.active_profile int_size:IS_8
+snapshotpb.v1.DeviceConfig.boot_text max_size:10

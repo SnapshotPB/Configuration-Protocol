@@ -1,0 +1,70 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
+
+// Autococker-specific firing configuration. Selected as a board model arm of the
+// `board_config` oneof in Profile (snapshotpb.v1).
+
+syntax = "proto3";
+
+package snapshotpb.autococker.v1;
+
+import "snapshotpb/autococker/v1/fire_mode.proto";
+import "snapshotpb/common/v1/eye_mode.proto";
+
+// Autococker-specific firing mechanics: fire mode, eye sensing, solenoid timing,
+// ramping, and trigger debounce.
+message AutocockerConfig {
+  // User preferred fire mode
+  AutocockerFireMode fire_mode = 1;
+
+  // Eye mode the marker supports if any
+  snapshotpb.common.v1.EyeMode eye_mode = 2;
+
+  // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
+  // if the value is below this threshold.
+  uint32 eye_threshold = 3;
+
+  // The amount of time in tenths of a millisecond the eye must be within threshold to determine a
+  // ball is in the breach
+  uint32 eye_debounce = 4;
+
+  // The amount of time in tenths of a millisecond the sear solenoid will be energized during the
+  // firing cycle
+  uint32 sear_solenoid_dwell = 5;
+
+  // The amount of time in tenths of a millisecond the cocking solenoid waits after a trigger pull
+  // before energizing
+  uint32 cocking_solenoid_delay = 6;
+
+  // The amount of time in tenths of a millisecond the cocking solenoid will energize to open the
+  // breach. When using an eye sensor, this setting is ignored.
+  uint32 cocking_solenoid_dwell_open = 7;
+
+  // The amount of time in tenths of a millisecond the cocking solenoid will stay deenergized to close
+  // the breach and prevent the next firing cycle
+  uint32 cocking_solenoid_dwell_closed = 8;
+
+  // The percentage (divided by ten) of increase to the current fire rate once
+  // `rampingCustomTriggerPulls` criteria has been met. ie 3 trigger pulls at a multiplier value of
+  // 25 (250%) will target a fire rate of 7.5 balls per second. Trigger pulls are counted in a
+  // rolling one-second window so fire rate will increase and decrease relative to consistent trigger
+  // rate.
+  uint32 ramping_custom_multiplier = 9;
+
+  // The number of trigger pulls required in a one-second window to enter ramping for the following
+  // one second.
+  uint32 ramping_custom_trigger_pulls = 10;
+
+  // A minimum rate of fire in ramping mode regardless of trigger pulls in the rolling window.
+  uint32 ramping_custom_rof_minimum = 11;
+
+  // The amount of time in tenths of a millisecond the trigger must be pulled to begin a firing
+  // cycle.
+  uint32 trigger_debounce_on = 12;
+
+  // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
+  // `triggerDebounceOn` cycle.
+  uint32 trigger_debounce_off = 13;
+}

@@ -1,0 +1,23 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: GPL-3.0-only
+// Licensed under the GNU General Public License v3.0. See the LICENSE file or
+// https://www.gnu.org/licenses/gpl-3.0.html
+
+// App-writable device settings.
+
+syntax = "proto3";
+
+package snapshotpb.v1;
+
+// App-writable device settings — the message clients send to configure the
+// board. Board-owned, read-only fields (device_id, lockout_enabled,
+// supported_profile_count) live on Device instead, so a client write cannot
+// alter them.
+message DeviceConfig {
+  // 1-based index of the profile to activate, in [1, Device.supported_profile_count];
+  // 0 means unset. Stored as a uint8 in firmware (see device_config.options).
+  uint32 active_profile = 1;
+
+  // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
+  string boot_text = 2;
+}
