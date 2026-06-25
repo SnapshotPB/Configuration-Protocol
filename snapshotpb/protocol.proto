@@ -1,4 +1,4 @@
-// Wrapper message for the autococker message protocol.
+// Wrapper message for the SnapshotPB board configuration protocol.
 
 syntax = "proto3";
 

@@ -1,0 +1,63 @@
+// Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0.
+// To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+// A profile defining a user configuration for the marker
+
+syntax = "proto3";
+
+import "autococker.proto";
+
+enum ProfileType {
+    DEFAULT = 0;
+    CUSTOM = 1;
+}
+
+enum ScreenBrightness {
+  // Minimal brightness, lowest power consumption.
+  SCREEN_BRIGHTNESS_LOW = 0;
+
+  // Default brightness
+  SCREEN_BRIGHTNESS_DEFAULT = 1;
+
+  // Maximum brightness, highest power consumption.
+  SCREEN_BRIGHTNESS_HIGH = 2;
+}
+
+// A profile defining a user configuration for the marker
+message Profile {
+    // Name for the given profile limited to 10 ASCII characters (0-255)
+    string name = 1;
+
+    // Identifier for client to understand granularity of control the user prefers
+    ProfileType type = 2;
+
+    // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
+    // this cap.
+    uint32 fire_rate_cap = 4;
+
+    // The amount of time in minutes for the board to automatically shut off without trigger or button
+    // interactions.
+    uint32 board_auto_off = 17;
+
+    // Device setting for how bright the screen should be.
+    ScreenBrightness screen_brightness = 18;
+
+    // Board-model-specific firing configuration. The set arm identifies the board model.
+    oneof board_config {
+        AutocockerConfig autococker = 19;
+    }
+
+    // Field numbers and names vacated when autococker-specific firing config moved to
+    // AutocockerConfig. Reserved to prevent accidental reuse.
+    reserved 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16;
+    reserved "fire_mode", "eye_mode", "eye_threshold", "eye_debounce",
+             "sear_solenoid_dwell", "cocking_solenoid_delay",
+             "cocking_solenoid_dwell_open", "cocking_solenoid_dwell_closed",
+             "ramping_custom_multiplier", "ramping_custom_trigger_pulls",
+             "ramping_custom_rof_minimum", "trigger_debounce_on",
+             "trigger_debounce_off";
+}
+
+message Profiles {
+    repeated Profile profiles = 1;
+}
