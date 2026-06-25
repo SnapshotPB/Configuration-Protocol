@@ -1,5 +1,5 @@
 // Configuration Protocol  © 2026 by Snapshot PB is licensed under CC BY-NC-SA 4.0. 
 // To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-Device.device_id max_size:16
-Device.boot_text max_size:10
+snapshotpb.v1.Device.device_id max_size:16
+snapshotpb.v1.Device.boot_text max_size:10

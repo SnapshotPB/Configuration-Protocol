@@ -9,7 +9,9 @@ describes how an app reads and writes a board's device state and user profiles.
 
 ## Project structure
 
-All schema lives under `snapshotpb/`:
+All schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`. The versioned
+package (`v1`) means future incompatible revisions land in a new package (`v2`) without
+breaking existing consumers.
 
 | File | Purpose |
 | --- | --- |
@@ -17,7 +19,7 @@ All schema lives under `snapshotpb/`:
 | `device.proto` | `Device` — per-board state (device id, active profile, lockout, boot text) and the `ProfileId` slot enum. |
 | `profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
 | `autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. |
-| `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. |
+| `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.Device.boot_text`. |
 
 ### Message model
 
@@ -70,10 +72,12 @@ open to new board types without disturbing existing ones:
 
 Suppose we want to support a spool-valve marker. Add a new board model in three steps.
 
-**1. Define the board's config message in its own file** — `snapshotpb/spool.proto`:
+**1. Define the board's config message in its own file** — `snapshotpb/v1/spool.proto`:
 
 ```proto
 syntax = "proto3";
+
+package snapshotpb.v1;
 
 // Spool-valve-specific firing mechanics. Selected as a board model arm of the
 // `board_config` oneof in Profile.
@@ -90,8 +94,8 @@ message SpoolConfig {
 using the next unused field number (`autococker` is `19`, so `spool` is `20`):
 
 ```proto
-import "autococker.proto";
-import "spool.proto";
+import "snapshotpb/v1/autococker.proto";
+import "snapshotpb/v1/spool.proto";
 
 // ...
     oneof board_config {
@@ -101,14 +105,46 @@ import "spool.proto";
 ```
 
 **3. (Optional) add nanopb constraints** for any bounded `bytes`, `string`, or
-`repeated` fields in a matching `snapshotpb/spool.options` file, e.g.:
+`repeated` fields in a matching `snapshotpb/v1/spool.options` file, with fully
+qualified keys, e.g.:
 
 ```
-SpoolConfig.some_label max_size:10
+snapshotpb.v1.SpoolConfig.some_label max_size:10
 ```
 
 That's it — existing `autococker` profiles are unaffected, and clients that don't
 recognize `spool` simply see an unset `board_config`.
+
+## Conventions
+
+The schema follows [buf](https://buf.build) `STANDARD` lint rules. When editing:
+
+- Every file declares `package snapshotpb.v1;` and imports by full path
+  (`import "snapshotpb/v1/<file>.proto";`).
+- Every enum has a zero value suffixed `_UNSPECIFIED` and all values prefixed with the
+  enum name, e.g. `FIRE_MODE_UNSPECIFIED = 0; FIRE_MODE_MECHANICAL = 1;`.
+- `.options` keys are fully qualified with the package.
+
+## Validation / CI
+
+Pull requests that touch protos are validated by the [`Proto`](.github/workflows/proto.yml)
+GitHub Action, which runs:
+
+- `buf build` — confirms the protos compile and imports resolve.
+- `buf lint` — enforces the `STANDARD` ruleset above.
+- `buf breaking` — compares against the PR's base branch and **fails the build on any
+  source-breaking change** (field renames, type changes, deletions, renumbering).
+
+To run the same checks locally:
+
+```sh
+buf build
+buf lint
+buf breaking --against '.git#branch=main'
+```
+
+Intentional breaking changes should be made in a new version package (e.g. `snapshotpb.v2`)
+rather than mutating `v1`.
 
 ## License
 

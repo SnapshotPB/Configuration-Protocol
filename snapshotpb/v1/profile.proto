@@ -5,22 +5,28 @@
 
 syntax = "proto3";
 
-import "autococker.proto";
+package snapshotpb.v1;
+
+import "snapshotpb/v1/autococker.proto";
 
 enum ProfileType {
-    DEFAULT = 0;
-    CUSTOM = 1;
+    PROFILE_TYPE_UNSPECIFIED = 0;
+    PROFILE_TYPE_DEFAULT = 1;
+    PROFILE_TYPE_CUSTOM = 2;
 }
 
 enum ScreenBrightness {
+  // Unset / unknown brightness.
+  SCREEN_BRIGHTNESS_UNSPECIFIED = 0;
+
   // Minimal brightness, lowest power consumption.
-  SCREEN_BRIGHTNESS_LOW = 0;
+  SCREEN_BRIGHTNESS_LOW = 1;
 
   // Default brightness
-  SCREEN_BRIGHTNESS_DEFAULT = 1;
+  SCREEN_BRIGHTNESS_DEFAULT = 2;
 
   // Maximum brightness, highest power consumption.
-  SCREEN_BRIGHTNESS_HIGH = 2;
+  SCREEN_BRIGHTNESS_HIGH = 3;
 }
 
 // A profile defining a user configuration for the marker
