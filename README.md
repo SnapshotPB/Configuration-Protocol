@@ -148,6 +148,6 @@ rather than mutating `v1`.
 
 ## License
 
-Configuration Protocol © 2026 by Snapshot PB is licensed under
-[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). See
-[`LICENSE`](LICENSE).
+Configuration Protocol © 2026 Snapshot PB is licensed under the
+[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+(`GPL-3.0-only`). See [`LICENSE`](LICENSE).
