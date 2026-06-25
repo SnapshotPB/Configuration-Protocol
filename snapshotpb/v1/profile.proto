@@ -39,29 +39,19 @@ message Profile {
 
     // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
     // this cap.
-    uint32 fire_rate_cap = 4;
+    uint32 fire_rate_cap = 3;
 
     // The amount of time in minutes for the board to automatically shut off without trigger or button
     // interactions.
-    uint32 board_auto_off = 17;
+    uint32 board_auto_off = 4;
 
     // Device setting for how bright the screen should be.
-    ScreenBrightness screen_brightness = 18;
+    ScreenBrightness screen_brightness = 5;
 
     // Board-model-specific firing configuration. The set arm identifies the board model.
     oneof board_config {
-        AutocockerConfig autococker = 19;
+        AutocockerConfig autococker = 6;
     }
-
-    // Field numbers and names vacated when autococker-specific firing config moved to
-    // AutocockerConfig. Reserved to prevent accidental reuse.
-    reserved 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16;
-    reserved "fire_mode", "eye_mode", "eye_threshold", "eye_debounce",
-             "sear_solenoid_dwell", "cocking_solenoid_delay",
-             "cocking_solenoid_dwell_open", "cocking_solenoid_dwell_closed",
-             "ramping_custom_multiplier", "ramping_custom_trigger_pulls",
-             "ramping_custom_rof_minimum", "trigger_debounce_on",
-             "trigger_debounce_off";
 }
 
 message Profiles {
