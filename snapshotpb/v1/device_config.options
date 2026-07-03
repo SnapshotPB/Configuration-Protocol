@@ -4,4 +4,4 @@
 // https://www.gnu.org/licenses/gpl-3.0.html
 
 snapshotpb.v1.DeviceConfig.active_profile int_size:IS_8
-snapshotpb.v1.DeviceConfig.boot_text max_size:10
+snapshotpb.v1.DeviceConfig.boot_text max_size:11
