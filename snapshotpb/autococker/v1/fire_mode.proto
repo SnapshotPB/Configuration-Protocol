@@ -16,14 +16,16 @@ enum AutocockerFireMode {
   // Replicate the functionality of a mechanical autococker. Pulling the trigger will engage the sear
   // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
   // while the trigger is released. Trigger configuration still applies for determining position.
+  // Eye sensing does not apply in this mode: the breach is held open by the trigger, not a timed
+  // dwell, so there is no eye-gated cocking phase.
   AUTOCOCKER_FIRE_MODE_MECHANICAL = 1;
 
   // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with
   // the limit being the shortest value of either marker timing or BPS cap
   AUTOCOCKER_FIRE_MODE_SEMI = 2;
 
-  // For a pump marker, the cocking solenoid will never be triggered. Sear, trigger, and eyes are
-  // still applicable.
+  // For a pump marker: the cocking solenoid is never energized and there is no cocking phase for
+  // the eye to gate, so eye sensing does not apply. Sear and trigger timing still apply.
   AUTOCOCKER_FIRE_MODE_TRIGGER_ONLY = 3;
 
   // Fires with the limit being the shortest value of either marker timing or BPS cap

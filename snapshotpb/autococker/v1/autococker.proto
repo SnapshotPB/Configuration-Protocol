@@ -19,7 +19,11 @@ message AutocockerConfig {
   // User preferred fire mode
   AutocockerFireMode fire_mode = 1;
 
-  // Eye mode the marker supports if any
+  // Eye (breach ball-detection) sensor type, if any. Eye sensing gates the cocking-open phase
+  // only in fire modes that have one: SEMI, FULL_AUTO, and RAMPING_NXL_2026. It is not used by
+  // MECHANICAL (the breach is held open by the trigger, not a timed dwell) or by TRIGGER_ONLY
+  // (no cocking phase at all). See `cocking_solenoid_timeout` for the anti-jam bound applied to
+  // the eye-active open phase.
   snapshotpb.common.v1.EyeMode eye_mode = 2;
 
   // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
@@ -67,4 +71,19 @@ message AutocockerConfig {
   // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
   // `triggerDebounceOn` cycle.
   uint32 trigger_debounce_off = 13;
+
+  // C T/OUT (anti-jam fail-open). The maximum time in tenths of a millisecond the cocking
+  // solenoid may remain energized waiting for the eye to confirm a seated ball before the breach
+  // is closed on timing instead. Bounds the eye-active cocking-open phase so a missed feed can
+  // never strand the coil energized indefinitely.
+  //
+  // Only consulted when `eye_mode` selects a real sensor (REFLECTIVE or BREAK_BEAM) in a fire
+  // mode that has an eye-gated cocking phase: SEMI, FULL_AUTO, and RAMPING_NXL_2026. It is not
+  // used by MECHANICAL or TRIGGER_ONLY (see `eye_mode`).
+  //
+  // Zero is NOT "disabled". The proto3 default 0 -- and any profile persisted before this field
+  // existed -- selects the firmware's built-in safe default ceiling rather than an unbounded
+  // wait, so the timeout can never be turned off. This matches the fail-safe-to-timing behaviour
+  // used elsewhere in the firing cycle.
+  uint32 cocking_solenoid_timeout = 14;
 }
