@@ -186,5 +186,5 @@ rather than mutating `v1`.
 ## License
 
 Configuration Protocol © 2026 Snapshot PB is licensed under the
-[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.html)
-(`GPL-3.0-only`). See [`LICENSE`](LICENSE).
+[Mozilla Public License, Version 2.0](https://mozilla.org/MPL/2.0/)
+(`MPL-2.0`). See [`LICENSE`](LICENSE).
