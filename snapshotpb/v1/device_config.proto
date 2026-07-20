@@ -1,7 +1,8 @@
 // Configuration Protocol © 2026 Snapshot PB
-// SPDX-License-Identifier: GPL-3.0-only
-// Licensed under the GNU General Public License v3.0. See the LICENSE file or
-// https://www.gnu.org/licenses/gpl-3.0.html
+// SPDX-License-Identifier: MPL-2.0
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // App-writable device settings.
 
