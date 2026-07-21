@@ -46,11 +46,11 @@ message Profile {
   ProfileType type = 2;
 
   // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
-  // this cap.
+  // this cap. 0 = uncapped (firmware uses the maximum); otherwise clamped to 1-100 RPS.
   uint32 fire_rate_cap = 3;
 
   // The amount of time in minutes for the board to automatically shut off without trigger or button
-  // interactions.
+  // interactions. Range 0-9999 minutes.
   uint32 board_auto_off = 4;
 
   // Device setting for how bright the screen should be.

@@ -16,6 +16,10 @@ import "snapshotpb/common/v1/eye_mode.proto";
 
 // Autococker-specific firing mechanics: fire mode, eye sensing, solenoid timing,
 // ramping, and trigger debounce.
+//
+// Numeric range notes below are the ranges the firmware enforces (clamps to) at its write
+// chokepoint; a value outside the stated range is silently bounded into it, never rejected. The
+// tenths-of-a-ms timing fields share a 0-99999 ceiling (0-9999.9 ms).
 message AutocockerConfig {
   // User preferred fire mode
   AutocockerFireMode fire_mode = 1;
@@ -27,64 +31,68 @@ message AutocockerConfig {
   // the eye-active open phase.
   snapshotpb.common.v1.EyeMode eye_mode = 2;
 
-  // Reflective sensors register a value between 0 and 1000, the eye is considered to see a paintball
-  // if the value is below this threshold.
+  // Breach eye detection threshold: the eye is considered to see a paintball if the reading is
+  // below this threshold. Stored as a 0-100 percent of the ADC full scale (0 selects the firmware
+  // default of 50%); the firmware scales it to raw ADC counts before the compare.
   uint32 eye_threshold = 3;
 
   // The amount of time in tenths of a millisecond the eye must be within threshold to determine a
-  // ball is in the breach
+  // ball is in the breach. Range 0-99999 (0-9999.9 ms).
   uint32 eye_debounce = 4;
 
   // The amount of time in tenths of a millisecond the sear solenoid will be energized during the
-  // firing cycle
+  // firing cycle. Range 0-99999 (0-9999.9 ms).
   uint32 sear_solenoid_dwell = 5;
 
   // The amount of time in tenths of a millisecond the cocking solenoid waits after a trigger pull
-  // before energizing
+  // before energizing. Range 0-99999 (0-9999.9 ms).
   uint32 cocking_solenoid_delay = 6;
 
   // The amount of time in tenths of a millisecond the cocking solenoid will energize to open the
-  // breach. When using an eye sensor, this setting is ignored.
+  // breach. When using an eye sensor, this setting is ignored. Range 0-99999 (0-9999.9 ms).
   uint32 cocking_solenoid_dwell_open = 7;
 
   // The amount of time in tenths of a millisecond the cocking solenoid will stay deenergized to close
-  // the breach and prevent the next firing cycle
+  // the breach and prevent the next firing cycle. Range 0-99999 (0-9999.9 ms).
   uint32 cocking_solenoid_dwell_closed = 8;
 
   // The percentage (divided by ten) of increase to the current fire rate once
   // `rampingCustomTriggerPulls` criteria has been met. ie 3 trigger pulls at a multiplier value of
   // 25 (250%) will target a fire rate of 7.5 balls per second. Trigger pulls are counted in a
   // rolling one-second window so fire rate will increase and decrease relative to consistent trigger
-  // rate.
+  // rate. Range 0-99999 (a fixed-point scalar, not a time).
   uint32 ramping_custom_multiplier = 9;
 
   // The number of trigger pulls required in a one-second window to enter ramping for the following
-  // one second.
+  // one second. Range 0-9999.
   uint32 ramping_custom_trigger_pulls = 10;
 
   // A minimum rate of fire in ramping mode regardless of trigger pulls in the rolling window.
+  // Range 0-9999 (bps).
   uint32 ramping_custom_rof_minimum = 11;
 
   // The amount of time in tenths of a millisecond the trigger must be pulled to begin a firing
-  // cycle.
+  // cycle. Range 0-99999 (0-9999.9 ms); 0 selects the firmware debounce default (200 = 20.0 ms),
+  // so 0 cannot disable bounce rejection.
   uint32 trigger_debounce_on = 12;
 
   // The amount of time in tenths of a millisecond the trigger must not be sensed before entering
-  // `triggerDebounceOn` cycle.
+  // `triggerDebounceOn` cycle. Range 0-99999 (0-9999.9 ms); 0 selects the firmware debounce default
+  // (200 = 20.0 ms).
   uint32 trigger_debounce_off = 13;
 
   // C T/OUT (anti-jam fail-open). The maximum time in tenths of a millisecond the cocking
   // solenoid may remain energized waiting for the eye to confirm a seated ball before the breach
   // is closed on timing instead. Bounds the eye-active cocking-open phase so a missed feed can
-  // never strand the coil energized indefinitely.
+  // never strand the coil energized indefinitely. Range 0-99999 (0-9999.9 ms).
   //
   // Only consulted when `eye_mode` selects a real sensor (REFLECTIVE or BREAK_BEAM) in a fire
   // mode that has an eye-gated cocking phase: SEMI, FULL_AUTO, and RAMPING_NXL_2026. It is not
   // used by MECHANICAL or TRIGGER_ONLY (see `eye_mode`).
   //
   // Zero is NOT "disabled". The proto3 default 0 -- and any profile persisted before this field
-  // existed -- selects the firmware's built-in safe default ceiling rather than an unbounded
-  // wait, so the timeout can never be turned off. This matches the fail-safe-to-timing behaviour
-  // used elsewhere in the firing cycle.
+  // existed -- selects the firmware's built-in safe default ceiling (5000 = 500 ms) rather than an
+  // unbounded wait, so the timeout can never be turned off. This matches the fail-safe-to-timing
+  // behaviour used elsewhere in the firing cycle.
   uint32 cocking_solenoid_timeout = 14;
 }
