@@ -46,7 +46,9 @@ message Profile {
   ProfileType type = 2;
 
   // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
-  // this cap. 0 = uncapped (firmware uses the maximum); otherwise clamped to 1-100 RPS.
+  // this cap. 0 = uncapped (firmware uses the maximum); otherwise clamped to 1-100 RPS. Factory
+  // default is 13 RPS: a fresh/unset profile must be materialized as 13 by BOTH the app and the
+  // firmware -- do not rely on the proto3 zero-value, which means uncapped, not the default.
   uint32 fire_rate_cap = 3;
 
   // The amount of time in minutes for the board to automatically shut off without trigger or button
