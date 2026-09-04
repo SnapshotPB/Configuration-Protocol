@@ -10,6 +10,41 @@ syntax = "proto3";
 
 package snapshotpb.v1;
 
+// The part of the display the marker's grip frame actually reveals.
+//
+// The board's screen sits behind a grip frame, and the frame variant a marker is
+// built into hides a different part of it — in both axes. The board drives the
+// whole panel either way, so anything laid out over the hidden part is simply not
+// visible to the user. This rectangle tells the board where to lay its UI out.
+//
+// It is a RECTANGLE rather than a choice from a list on purpose: grip frames the
+// board firmware has never heard of have to work, so a client describes the cutout
+// it measured instead of naming one the board already knows.
+//
+// COORDINATES are the panel's own, in pixels, origin at its 0,0. Mind the 90°
+// mount: the panel is 128 wide by 32 tall in ITS frame, but is fitted turned, so
+// `w` is how much of the user's VERTICAL run is revealed and `h` how much of the
+// horizontal WIDTH. Measure on the glass, then map through that rotation once.
+//
+// BOUNDS, enforced by the board — a write outside them is rejected whole:
+//   x + w <= 128, y + h <= 32     (a window is part of the panel)
+//   w >= 70, h >= 26              (below this the UI stops being readable; the
+//                                  four-digit shot counter alone needs 64 x 16)
+//
+// A word of care: the board cannot tell whether the rectangle you send matches the
+// frame actually fitted, so a legal rectangle in the wrong PLACE shows the user
+// nothing at all — and the on-screen menu is one of the ways they would fix it.
+// Offer a way back to the whole panel (Setup > Full window does this on the board).
+message DisplayWindow {
+  // Top-left corner, offset from the panel's 0,0.
+  uint32 x = 1;
+  uint32 y = 2;
+
+  // Extent. `w` runs along the panel's long axis (the user's vertical).
+  uint32 w = 3;
+  uint32 h = 4;
+}
+
 // App-writable device settings — the message clients send to configure the
 // board. Board-owned, read-only fields (device_id, lockout_enabled,
 // supported_profile_count) live on Device instead, so a client write cannot
@@ -21,4 +56,11 @@ message DeviceConfig {
 
   // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
   string boot_text = 2;
+
+  // The grip frame cutout the board lays its UI out inside. OMIT IT to leave the
+  // board's current window alone — a message field has explicit presence, so a
+  // client that writes only boot_text cannot move the window by omission, and
+  // there is no "zero rectangle" that could be confused with not having said.
+  // A board that has never been given one uses the whole panel.
+  DisplayWindow display_window = 3;
 }
