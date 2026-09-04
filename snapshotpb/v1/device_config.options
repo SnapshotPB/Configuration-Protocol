@@ -6,3 +6,12 @@
 
 snapshotpb.v1.DeviceConfig.active_profile int_size:IS_8
 snapshotpb.v1.DeviceConfig.boot_text max_size:11
+
+// Panel coordinates: nothing legal exceeds 128, so 16 bits is ample headroom and
+// nanopb REJECTS an over-range varint at decode rather than truncating it — which
+// is the behaviour we want, since a truncated coordinate is a plausible-looking
+// rectangle in the wrong place rather than an obvious error.
+snapshotpb.v1.DisplayWindow.x int_size:IS_16
+snapshotpb.v1.DisplayWindow.y int_size:IS_16
+snapshotpb.v1.DisplayWindow.w int_size:IS_16
+snapshotpb.v1.DisplayWindow.h int_size:IS_16
