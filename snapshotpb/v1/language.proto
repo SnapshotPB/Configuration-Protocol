@@ -44,4 +44,10 @@ enum Language {
 
   // Spanish.
   LANGUAGE_ES = 2;
+
+  // German.
+  LANGUAGE_DE = 3;
+
+  // French.
+  LANGUAGE_FR = 4;
 }
