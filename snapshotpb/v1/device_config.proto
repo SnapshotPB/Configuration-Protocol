@@ -10,6 +10,8 @@ syntax = "proto3";
 
 package snapshotpb.v1;
 
+import "snapshotpb/v1/language.proto";
+
 // The part of the display the marker's grip frame actually reveals.
 //
 // The board's screen sits behind a grip frame, and the frame variant a marker is
@@ -54,7 +56,14 @@ message DeviceConfig {
   // 0 means unset. Stored as a uint8 in firmware (see device_config.options).
   uint32 active_profile = 1;
 
-  // Text displayed briefly when the board is turned on. Defaults to SnapshotPB. Limit of 10 bytes.
+  // Text the board shows for a moment when it is turned on. It defaults to
+  // SnapshotPB. The limit is 10 BYTES, not 10 characters: UTF-8 spends more than
+  // one byte on a character outside ASCII, so an accented letter costs two.
+  //
+  // This is the user's own text, so DeviceConfig.language does not constrain it.
+  // The board's font pack decides which characters the board can draw, and the
+  // client limits the user's input to the characters that pack holds. A character
+  // the font pack lacks does not draw.
   string boot_text = 2;
 
   // The grip frame cutout the board lays its UI out inside. OMIT IT to leave the
@@ -63,4 +72,19 @@ message DeviceConfig {
   // there is no "zero rectangle" that could be confused with not having said.
   // A board that has never been given one uses the whole panel.
   DisplayWindow display_window = 3;
+
+  // The language the board draws ITS OWN menu text in. It does not constrain
+  // boot_text above, or Profile.name, which stay the user's own text -- see
+  // language.proto. OMIT IT, or send LANGUAGE_UNSPECIFIED, to leave the board's
+  // current language alone.
+  //
+  // The board applies a language it draws, and IGNORES a value it does not know:
+  // it keeps its current language and applies the rest of the message. This is
+  // deliberately unlike display_window, which rejects the whole message when the
+  // rectangle is out of bounds. A rectangle in the wrong place shows the user
+  // nothing, so a bad one must not reach the board. A language a board is too old
+  // to draw means only that the client knows more than the board, and the other
+  // fields in the message are still good. So a client must not assume a write took
+  // effect. Read the DeviceConfig back to see which language the board holds.
+  Language language = 4;
 }
