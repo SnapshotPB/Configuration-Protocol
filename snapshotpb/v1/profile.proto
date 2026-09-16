@@ -39,7 +39,14 @@ enum ScreenBrightness {
 
 // A profile defining a user configuration for the marker
 message Profile {
-  // Name for the given profile limited to 10 ASCII characters (0-255)
+  // The user's name for this profile. The limit is 9 BYTES, not 9 characters:
+  // UTF-8 spends more than one byte on a character outside ASCII, so an accented
+  // letter costs two. The firmware holds the name in a char[10] -- profile.options
+  // sets max_size:10, and nanopb counts the null terminator inside that size.
+  //
+  // This is the user's own text, so DeviceConfig.language does not constrain it.
+  // The board's font pack decides which characters the board can draw, and the
+  // client limits the user's input to the characters that pack holds.
   string name = 1;
 
   // Identifier for client to understand granularity of control the user prefers

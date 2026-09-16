@@ -1,0 +1,47 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: MPL-2.0
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// The language of the board's own menu text.
+
+syntax = "proto3";
+
+package snapshotpb.v1;
+
+// The language of the board's OWN text: the menu item names, the titles, the
+// value labels and the status words that the firmware itself owns. It selects
+// which set of those strings the board draws, so that the user reads the menu in
+// a language they know.
+//
+// IT DOES NOT CONSTRAIN USER TEXT. DeviceConfig.boot_text and Profile.name hold
+// whatever the user types. The board's font pack decides which characters the
+// board can draw, and the CLIENT limits the user's input to the characters that
+// pack holds. The language and the font pack are separate concerns: a board set to
+// LANGUAGE_EN still draws a profile name that carries an accent, as long as the
+// font pack holds that accented letter.
+//
+// Each value carries a language CODE, not the name of the language. The code is
+// the ISO 639-1 code in upper case, and a regional variant adds the ISO 3166-1
+// region after an underscore, as in LANGUAGE_PT_BR. A client maps the code to the
+// name it shows the user, such as "English" for LANGUAGE_EN. Only the client knows
+// which language to show that name in, and the board's 8x8 cell cannot draw every
+// language's own name for itself.
+//
+// This enum lists only the languages the firmware draws. A value here is a promise
+// that a board can draw that language, so add a value in the same change that adds
+// its strings. Do not add a value for a language that has no strings yet.
+enum Language {
+  // Unset. A DeviceConfig that carries this value leaves the board's language
+  // alone. It is also what an older client sends, which must not move a board off
+  // the language its user chose.
+  LANGUAGE_UNSPECIFIED = 0;
+
+  // English. Every board draws English, and a board falls back to it when it has
+  // no language of its own yet.
+  LANGUAGE_EN = 1;
+
+  // Spanish.
+  LANGUAGE_ES = 2;
+}
