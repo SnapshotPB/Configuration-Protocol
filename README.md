@@ -21,9 +21,9 @@ leaving existing consumers untouched.
 | --- | --- |
 | `v1/protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
 | `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
-| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language). |
+| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay) and the `ScreenBrightness` enum. |
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
-| `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection, `ProfileType`, and `ScreenBrightness`. Holds the `board_config` oneof (see below). |
+| `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection and `ProfileType`. Holds the `board_config` oneof (see below). Tag 5 is reserved: `screen_brightness` moved to `DeviceConfig`. |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
 | `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, ramping). |
 | `common/v1/eye_mode.proto` | `EyeMode` — generic eye-sensing enum (off, reflective, break-beam) in the shared `snapshotpb.common.v1` package, reusable by any board model. |
@@ -35,19 +35,25 @@ leaving existing consumers untouched.
 Message
 └── oneof payload
     ├── Device         // board-owned, read-only (device_id, lockout, model, profile count)
-    ├── DeviceConfig   // app-configurable settings (active_profile, boot_text, display_window, language)
+    ├── DeviceConfig   // app-configurable settings (active_profile, boot_text, display_window,
+    │                  //                          language, screen_brightness, screen_off_delay)
     └── Profiles       // repeated Profile (max 4)
         └── Profile
-            ├── generic fields (name, type, fire_rate_cap, board_auto_off, screen_brightness)
+            ├── generic fields (name, type, fire_rate_cap, board_auto_off)
             └── oneof board_config
                 └── AutocockerConfig   // board-model-specific firing config
 ```
 
 `Device` carries board-owned state the app can only read (`device_id`,
 `lockout_enabled`, `model`, `supported_profile_count`). `DeviceConfig` holds the
-app-configurable settings (`active_profile`, `boot_text`, `display_window`, `language`) and
-is the only device message a client writes; the read-only fields don't exist on it, so they
-can't be altered.
+app-configurable settings (`active_profile`, `boot_text`, `display_window`, `language`,
+`screen_brightness`, `screen_off_delay`) and is the only device message a client writes; the
+read-only fields don't exist on it, so they can't be altered.
+
+The two screen fields belong to the **board**, not to a profile. One screen serves all four
+profile slots, so a per-profile brightness asked the board to hold four answers for one piece
+of glass and changed the brightness under the user at every profile switch. `screen_brightness`
+therefore moved off `Profile` tag 5, which is now reserved.
 
 ## Open approach to board types
 
@@ -63,7 +69,8 @@ message Profile {
     ProfileType type = 2;
     uint32 fire_rate_cap = 3;
     uint32 board_auto_off = 4;
-    ScreenBrightness screen_brightness = 5;
+
+    reserved 5;  // was screen_brightness; the screen is a DeviceConfig setting
 
     // Board-model-specific firing configuration. The set arm identifies the board model.
     oneof board_config {

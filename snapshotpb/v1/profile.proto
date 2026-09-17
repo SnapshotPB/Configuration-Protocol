@@ -23,22 +23,22 @@ enum ProfileType {
   PROFILE_TYPE_CUSTOM = 2;
 }
 
-enum ScreenBrightness {
-  // Unset / unknown brightness.
-  SCREEN_BRIGHTNESS_UNSPECIFIED = 0;
-
-  // Minimal brightness, lowest power consumption.
-  SCREEN_BRIGHTNESS_LOW = 1;
-
-  // Default brightness
-  SCREEN_BRIGHTNESS_DEFAULT = 2;
-
-  // Maximum brightness, highest power consumption.
-  SCREEN_BRIGHTNESS_HIGH = 3;
-}
-
 // A profile defining a user configuration for the marker
 message Profile {
+  // Tag 5 held ScreenBrightness screen_brightness. The screen belongs to the BOARD
+  // and not to a profile: one screen serves all four slots, so a per-profile value
+  // asked the board to hold four answers for one piece of glass, and a profile
+  // switch changed the brightness under the user. The setting now lives on
+  // DeviceConfig, together with screen_off_delay, and the ScreenBrightness enum
+  // moved to device_config.proto with it.
+  //
+  // A board that reads an old stored profile SKIPS this tag, so the brightness
+  // returns to the board default and the rest of the profile is unharmed. A client
+  // that still writes tag 5 has that tag ignored. Do not give tag 5 a new meaning:
+  // it is a varint, and a new varint field here would silently take the old value.
+  reserved 5;
+  reserved "screen_brightness";
+
   // The user's name for this profile. The limit is 9 BYTES, not 9 characters:
   // UTF-8 spends more than one byte on a character outside ASCII, so an accented
   // letter costs two. The firmware holds the name in a char[10] -- profile.options
@@ -61,9 +61,6 @@ message Profile {
   // The amount of time in minutes for the board to automatically shut off without trigger or button
   // interactions. Range 0-9999 minutes.
   uint32 board_auto_off = 4;
-
-  // Device setting for how bright the screen should be.
-  ScreenBrightness screen_brightness = 5;
 
   // Board-model-specific firing configuration. The set arm identifies the board model.
   oneof board_config {
