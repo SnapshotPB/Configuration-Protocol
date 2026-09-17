@@ -15,3 +15,9 @@ snapshotpb.v1.DisplayWindow.x int_size:IS_16
 snapshotpb.v1.DisplayWindow.y int_size:IS_16
 snapshotpb.v1.DisplayWindow.w int_size:IS_16
 snapshotpb.v1.DisplayWindow.h int_size:IS_16
+
+// The screen-off delay is 1-999 seconds, so 16 bits is ample and nanopb REJECTS an
+// over-range varint at decode rather than truncating it. A truncated delay would be a
+// plausible-looking number the user never asked for; a rejected message is an obvious
+// error. The board clamps whatever survives that decode into 1-999.
+snapshotpb.v1.DeviceConfig.screen_off_delay int_size:IS_16

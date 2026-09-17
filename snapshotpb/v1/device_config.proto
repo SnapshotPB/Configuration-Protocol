@@ -47,6 +47,26 @@ message DisplayWindow {
   uint32 h = 4;
 }
 
+// How bright the board drives its screen.
+//
+// It is a BOARD setting, on DeviceConfig, and not a profile setting. One screen
+// serves every profile slot, so a per-profile value asked the board to hold four
+// answers for one piece of glass. It lived on Profile tag 5 until the move; that
+// tag is now reserved, see profile.proto.
+enum ScreenBrightness {
+  // Unset / unknown brightness. The board uses its own default.
+  SCREEN_BRIGHTNESS_UNSPECIFIED = 0;
+
+  // Minimal brightness, lowest power consumption.
+  SCREEN_BRIGHTNESS_LOW = 1;
+
+  // Default brightness
+  SCREEN_BRIGHTNESS_DEFAULT = 2;
+
+  // Maximum brightness, highest power consumption.
+  SCREEN_BRIGHTNESS_HIGH = 3;
+}
+
 // App-writable device settings — the message clients send to configure the
 // board. Board-owned, read-only fields (device_id, lockout_enabled,
 // supported_profile_count) live on Device instead, so a client write cannot
@@ -87,4 +107,44 @@ message DeviceConfig {
   // fields in the message are still good. So a client must not assume a write took
   // effect. Read the DeviceConfig back to see which language the board holds.
   Language language = 4;
+
+  // How bright the board drives its screen. OMIT IT, or send
+  // SCREEN_BRIGHTNESS_UNSPECIFIED, to leave the board's current brightness alone —
+  // the same rule as `language` above, and for the same reason: this op takes a
+  // whole message, so a client that writes only `boot_text` sends the zero value
+  // for every other field and must not dim the screen by omission.
+  //
+  // The board also IGNORES a value outside the enum and keeps its current
+  // brightness, again like `language`. A brightness the board is too old to know
+  // means only that the client knows more than the board.
+  //
+  // IN STORAGE the zero value means something else: a record written before this
+  // field existed carries no brightness, and the board materializes
+  // SCREEN_BRIGHTNESS_DEFAULT for it. So a board updated across the move of this
+  // field off Profile tag 5 forgets its brightness once, and the user sets it
+  // again.
+  ScreenBrightness screen_brightness = 5;
+
+  // How long the board leaves the screen on after the last button press, in
+  // SECONDS. The range is 1 to 999, and the default is 5.
+  //
+  // The board counts from the last button press. A shot does not hold the screen
+  // on, and it does not wake a screen that is already off. The first button press
+  // after the screen goes off WAKES it and does nothing else, because the user
+  // cannot see the control they would be acting on.
+  //
+  // ON A WRITE, 0 means "leave the board's current delay alone", like the two
+  // fields above it. A value of 1000 or more is CLAMPED to 999 rather than
+  // rejected, so a write that carries one still applies its other fields. Read the
+  // DeviceConfig back to see the value the board holds.
+  //
+  // IN STORAGE, 0 means "unset", and the board materializes 5.
+  //
+  // There is NO value that keeps the screen on for ever. The largest delay is 999
+  // seconds, which is 16 minutes and 39 seconds.
+  //
+  // WHAT THE BOARD DOES with the screen is board-specific. A board that can switch
+  // its screen rail turns that rail off, which also saves the power. A board
+  // without that control stores the value and leaves its screen on.
+  uint32 screen_off_delay = 6;
 }
