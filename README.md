@@ -23,7 +23,7 @@ leaving existing consumers untouched.
 | `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
 | `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay) and the `ScreenBrightness` enum. |
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
-| `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection and `ProfileType`. Holds the `board_config` oneof (see below). Tag 5 is reserved: `screen_brightness` moved to `DeviceConfig`. |
+| `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection. Holds the `board_config` oneof (see below). Tags 2 and 5 are reserved: `type` (the deleted `ProfileType`) described the client UI only, and `screen_brightness` moved to `DeviceConfig`. |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
 | `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, ramping). |
 | `common/v1/eye_mode.proto` | `EyeMode` — generic eye-sensing enum (off, reflective, break-beam) in the shared `snapshotpb.common.v1` package, reusable by any board model. |
@@ -66,10 +66,10 @@ specific to a particular board model lives in its own message, selected through 
 // profile.proto
 message Profile {
     string name = 1;
-    ProfileType type = 2;
-    uint32 fire_rate_cap = 3;
+    uint32 fire_rate_cap = 3;  // tenths of a ball per second; 0 = uncapped
     uint32 board_auto_off = 4;
 
+    reserved 2;  // was ProfileType type; it described the client UI, not the board
     reserved 5;  // was screen_brightness; the screen is a DeviceConfig setting
 
     // Board-model-specific firing configuration. The set arm identifies the board model.
