@@ -12,17 +12,6 @@ package snapshotpb.v1;
 
 import "snapshotpb/autococker/v1/autococker.proto";
 
-enum ProfileType {
-  // Unset / unknown profile type.
-  PROFILE_TYPE_UNSPECIFIED = 0;
-
-  // Simplified profile: the user prefers coarse, default control.
-  PROFILE_TYPE_DEFAULT = 1;
-
-  // Custom profile: the user wants fine-grained control over settings.
-  PROFILE_TYPE_CUSTOM = 2;
-}
-
 // A profile defining a user configuration for the marker
 message Profile {
   // Tag 5 held ScreenBrightness screen_brightness. The screen belongs to the BOARD
@@ -39,6 +28,19 @@ message Profile {
   reserved 5;
   reserved "screen_brightness";
 
+  // Tag 2 held ProfileType type. The field told a client how much control the user
+  // wanted, and the client hid the timing and trigger fields in the simplified mode.
+  // It described the CLIENT UI and never changed how the board fires, so the board
+  // carried a value it could not act on, and two clients could disagree about which
+  // fields the same profile owned. Every client now shows all fields, so the field
+  // has no reader left. The ProfileType enum is deleted with it.
+  //
+  // A board that reads an old stored profile SKIPS this tag. A client that still
+  // writes tag 2 has that tag ignored. Do not give tag 2 a new meaning: it is a
+  // varint, and a new varint field here would silently take the old value.
+  reserved 2;
+  reserved "type";
+
   // The user's name for this profile. The limit is 9 BYTES, not 9 characters:
   // UTF-8 spends more than one byte on a character outside ASCII, so an accented
   // letter costs two. The firmware holds the name in a char[10] -- profile.options
@@ -49,13 +51,19 @@ message Profile {
   // client limits the user's input to the characters that pack holds.
   string name = 1;
 
-  // Identifier for client to understand granularity of control the user prefers
-  ProfileType type = 2;
-
-  // A maximum firerate for the marker. Board-specific timing may be artificially adjusted to honor
-  // this cap. 0 = uncapped (firmware uses the maximum); otherwise clamped to 1-100 RPS. Factory
-  // default is 13 RPS: a fresh/unset profile must be materialized as 13 by BOTH the app and the
-  // firmware -- do not rely on the proto3 zero-value, which means uncapped, not the default.
+  // A maximum firerate for the marker, in TENTHS of a ball per second. Board-specific timing may
+  // be artificially adjusted to honor this cap. 0 = uncapped (firmware uses the maximum);
+  // otherwise clamped to 10-1000 (1.0-100.0 BPS).
+  //
+  // Factory default is 105 (10.5 BPS), the NXL 2026 ramping limit. A fresh/unset profile must be
+  // materialized as 105 by BOTH the app and the firmware -- do not rely on the proto3 zero-value,
+  // which means uncapped, not the default.
+  //
+  // THE UNIT CHANGED IN PLACE. This tag held WHOLE balls per second (1-100, default 13) until the
+  // NXL cap of 10.5 BPS showed that a whole number cannot express a legal rate. The tag number and
+  // the wire type did not change, so a build on the old unit and a build on the new one both parse
+  // the field and disagree about it by a factor of ten: an old reader sees 105 as 105 BPS, and a
+  // new reader sees 13 as 1.3 BPS. Update the firmware and every client together.
   uint32 fire_rate_cap = 3;
 
   // The amount of time in minutes for the board to automatically shut off without trigger or button
