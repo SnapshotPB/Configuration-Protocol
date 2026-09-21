@@ -4,25 +4,44 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// Wrapper message for the SnapshotPB board configuration protocol.
+// The wire format: bare per-object messages, carried without an envelope.
 
 syntax = "proto3";
 
 package snapshotpb.v1;
 
-import "snapshotpb/v1/device.proto";
-import "snapshotpb/v1/device_config.proto";
-import "snapshotpb/v1/profile.proto";
-
-// Top-level envelope. Each exchange is a single Message carrying exactly one
-// payload; the set arm determines both the data and its direction:
-//   - Device:       reported by the board to clients (read-only state).
-//   - DeviceConfig: sent by a client to write device settings.
-//   - Profiles:     user profiles, read from or written to the board.
-message Message {
-  oneof payload {
-    Device device = 1;
-    Profiles profiles = 2;
-    DeviceConfig device_config = 3;
-  }
-}
+// This file held `message Message`, a top-level envelope whose `oneof payload`
+// carried exactly one Device, Profiles or DeviceConfig. Nothing ever put it on the
+// wire, and the type is removed.
+//
+// THE TRANSPORT ALREADY SAYS WHICH PAYLOAD IT CARRIES. Every exchange is an Object
+// Transfer Service object, selected BY NAME over OLCP ("device", "profiles",
+// "config") on a control plane that is always GATT. So the type is known before a
+// single content byte arrives, and an envelope tag would only restate what the
+// client just asked for. Selection is by name because both objects carry the
+// standard Object Type 0x2aca ("Unspecified"), which discriminates nothing.
+//
+// This stays true when the content moves off GATT. An L2CAP connection-oriented
+// channel is a faster DATA plane for the object's bytes; the OACP/OLCP control
+// plane does not move with it. A client picks the object the same way either way.
+//
+// So the wire carries a BARE message -- Device, Profiles or DeviceConfig encoded on
+// its own. The firmware and every client exchange that format, and always have.
+//
+// LEAVING THE TYPE HERE WAS NOT FREE. It looked like the natural wrapper, so one
+// client wrapped its payloads in it, and the two formats are incompatible in both
+// directions: a bare Device begins with field 1 as 16 raw UUID bytes, which an
+// envelope parse reads as a nested sub-message and then throws on the next tag.
+// That broke every real-hardware read and write for that client while its mock path
+// still passed, and it took a code review rather than a test to find. The type is
+// gone so the mistake has nothing left to reach for.
+//
+// DO NOT REINTRODUCE AN ENVELOPE HERE to give some future transport a type tag. A
+// transport with no object selection needs new framing, and new framing is a change
+// the firmware and every client make together -- not a message that reappears in a
+// schema and waits to be picked up.
+//
+// The file itself stays, so this reasoning has somewhere to live and so the
+// firmware's nanopb generation keeps working untouched: `app/CMakeLists.txt` and
+// `tests/menu_fc_integration/CMakeLists.txt` both list this path explicitly, and a
+// deletion would break those builds until a matching firmware change landed.

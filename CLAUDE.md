@@ -14,7 +14,7 @@ Core schema lives in package `snapshotpb.v1` under `snapshotpb/v1/`; each board 
 its own versioned sub-package (e.g. `snapshotpb.autococker.v1`), and shared types live in
 `snapshotpb.common.v1` (paths below are relative to `snapshotpb/`):
 
-- `v1/protocol.proto` — top-level `Message` wrapper (`oneof payload`).
+- `v1/protocol.proto` — documentation only: why the wire carries bare per-object messages and no envelope.
 - `v1/device.proto` — `Device` board-owned state and the `BoardModel` enum.
 - `v1/device_config.proto` — `DeviceConfig`, the app-writable device settings.
 - `v1/profile.proto` — `Profile`, `Profiles`, and the `board_config` oneof that selects a board model.

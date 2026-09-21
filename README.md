@@ -19,7 +19,7 @@ leaving existing consumers untouched.
 
 | File | Purpose |
 | --- | --- |
-| `v1/protocol.proto` | Top-level `Message` wrapper. A `oneof payload` carries exactly one of the protocol's payloads (`Device`, `DeviceConfig`, or `Profiles`). |
+| `v1/protocol.proto` | Documentation only. Held the top-level `Message` wrapper, which nothing ever put on the wire: the transport names the object it carries, so payloads are exchanged bare. The file records why, and why not to reintroduce one. |
 | `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
 | `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay) and the `ScreenBrightness` enum. |
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
@@ -31,17 +31,22 @@ leaving existing consumers untouched.
 
 ### Message model
 
+Each exchange carries exactly ONE of these messages, encoded on its own. There is no
+envelope: every exchange is an Object Transfer Service object selected by name over
+OLCP (`device`, `profiles`, `config`), so the transport already names the payload
+type before its bytes arrive.
+
 ```
-Message
-└── oneof payload
-    ├── Device         // board-owned, read-only (device_id, lockout, model, profile count)
-    ├── DeviceConfig   // app-configurable settings (active_profile, boot_text, display_window,
-    │                  //                          language, screen_brightness, screen_off_delay)
-    └── Profiles       // repeated Profile (max 4)
-        └── Profile
-            ├── generic fields (name, type, fire_rate_cap, board_auto_off)
-            └── oneof board_config
-                └── AutocockerConfig   // board-model-specific firing config
+Device          // board-owned, read-only (device_id, lockout, model, profile count)
+
+DeviceConfig    // app-configurable settings (active_profile, boot_text, display_window,
+                //                            language, screen_brightness, screen_off_delay)
+
+Profiles        // repeated Profile (max 4)
+└── Profile
+    ├── generic fields (name, fire_rate_cap, board_auto_off)
+    └── oneof board_config
+        └── AutocockerConfig   // board-model-specific firing config
 ```
 
 `Device` carries board-owned state the app can only read (`device_id`,
