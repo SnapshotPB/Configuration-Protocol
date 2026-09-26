@@ -41,10 +41,10 @@ message Profile {
   reserved 2;
   reserved "type";
 
-  // The user's name for this profile. The limit is 9 BYTES, not 9 characters:
+  // The user's name for this profile. The limit is 10 BYTES, not 10 characters:
   // UTF-8 spends more than one byte on a character outside ASCII, so an accented
-  // letter costs two. The firmware holds the name in a char[10] -- profile.options
-  // sets max_size:10, and nanopb counts the null terminator inside that size.
+  // letter costs two. The firmware holds the name in a char[11] -- profile.options
+  // sets max_size:11, and nanopb counts the null terminator inside that size.
   //
   // This is the user's own text, so DeviceConfig.language does not constrain it.
   // The board's font pack decides which characters the board can draw, and the
