@@ -4,5 +4,5 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-snapshotpb.v1.Profile.name max_size:10
+snapshotpb.v1.Profile.name max_size:11
 snapshotpb.v1.Profiles.profiles max_count:4
