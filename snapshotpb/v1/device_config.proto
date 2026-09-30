@@ -67,6 +67,30 @@ enum ScreenBrightness {
   SCREEN_BRIGHTNESS_HIGH = 3;
 }
 
+// The type of cell that supplies the board on BATT1.
+//
+// It is a BOARD setting, on DeviceConfig. The board uses it to choose the
+// voltage thresholds of its cell monitor: the level at which it shows a
+// low-cell warning, and the level at which it stops the shots. The voltage
+// alone does not identify the cell, because the ranges of the two types
+// overlap from 6.0 V to 8.4 V. So the user sets the type.
+//
+// The zero value is BATTERY_TYPE_UNSPECIFIED, and not BATTERY_TYPE_9V, for the
+// same reason as the other enums in this file. A client writes a whole
+// DeviceConfig, so a client that does not know this field sends the zero
+// value. That write must not change the battery type of the board.
+enum BatteryType {
+  // Unset. On a write, the board keeps its current battery type. In storage,
+  // the board reads this value as BATTERY_TYPE_9V.
+  BATTERY_TYPE_UNSPECIFIED = 0;
+
+  // One 9 V alkaline cell. This is the default, and the typical input.
+  BATTERY_TYPE_9V = 1;
+
+  // One 2S LiPo pack, 7.4 V nominal and 8.4 V full.
+  BATTERY_TYPE_2S_LIPO = 2;
+}
+
 // App-writable device settings — the message clients send to configure the
 // board. Board-owned, read-only fields (device_id, lockout_enabled,
 // supported_profile_count) live on Device instead, so a client write cannot
@@ -147,4 +171,21 @@ message DeviceConfig {
   // its screen rail turns that rail off, which also saves the power. A board
   // without that control stores the value and leaves its screen on.
   uint32 screen_off_delay = 6;
+
+  // The type of cell on BATT1. See BatteryType.
+  //
+  // ON A WRITE, OMIT IT, or send BATTERY_TYPE_UNSPECIFIED, to leave the board's
+  // current battery type alone. This is the same rule as `language` and
+  // `screen_brightness`. It matters more here: if an older client could reset a
+  // 2S LiPo board to BATTERY_TYPE_9V, the board would apply the thresholds of an
+  // alkaline cell and could discharge the pack too far.
+  //
+  // The board IGNORES a value outside the enum and keeps its current battery
+  // type. It applies the other fields of the message. Read the DeviceConfig back
+  // to see the value the board holds.
+  //
+  // IN STORAGE, BATTERY_TYPE_UNSPECIFIED means "unset", and the board
+  // materializes BATTERY_TYPE_9V. A record written before this field existed
+  // carries no battery type, so it reads as a 9 V cell.
+  BatteryType battery_type = 7;
 }
