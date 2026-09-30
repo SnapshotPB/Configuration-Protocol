@@ -21,7 +21,7 @@ leaving existing consumers untouched.
 | --- | --- |
 | `v1/protocol.proto` | Documentation only. Held the top-level `Message` wrapper, which nothing ever put on the wire: the transport names the object it carries, so payloads are exchanged bare. The file records why, and why not to reintroduce one. |
 | `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
-| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay) and the `ScreenBrightness` enum. |
+| `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay, battery type) and the `ScreenBrightness` and `BatteryType` enums. |
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
 | `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection. Holds the `board_config` oneof (see below). Tags 2 and 5 are reserved: `type` (the deleted `ProfileType`) described the client UI only, and `screen_brightness` moved to `DeviceConfig`. |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
@@ -40,7 +40,8 @@ type before its bytes arrive.
 Device          // board-owned, read-only (device_id, lockout, model, profile count)
 
 DeviceConfig    // app-configurable settings (active_profile, boot_text, display_window,
-                //                            language, screen_brightness, screen_off_delay)
+                //                            language, screen_brightness, screen_off_delay,
+                //                            battery_type)
 
 Profiles        // repeated Profile (max 4)
 └── Profile
@@ -52,7 +53,7 @@ Profiles        // repeated Profile (max 4)
 `Device` carries board-owned state the app can only read (`device_id`,
 `lockout_enabled`, `model`, `supported_profile_count`). `DeviceConfig` holds the
 app-configurable settings (`active_profile`, `boot_text`, `display_window`, `language`,
-`screen_brightness`, `screen_off_delay`) and is the only device message a client writes; the
+`screen_brightness`, `screen_off_delay`, `battery_type`) and is the only device message a client writes; the
 read-only fields don't exist on it, so they can't be altered.
 
 The two screen fields belong to the **board**, not to a profile. One screen serves all four
