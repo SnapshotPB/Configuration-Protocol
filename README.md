@@ -25,7 +25,7 @@ leaving existing consumers untouched.
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
 | `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection. Holds the `board_config` oneof (see below). Tags 2 and 5 are reserved: `type` (the deleted `ProfileType`) described the client UI only, and `screen_brightness` moved to `DeviceConfig`. |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
-| `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, ramping). |
+| `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, NXL 2026 ramping, custom ramping). The NXL 2026 mode has no adjustable rule: `fire_rate_cap` and the `ramping_custom_*` fields do not apply in it. The `ramping_custom_*` fields apply in the custom ramping mode only. |
 | `common/v1/eye_mode.proto` | `EyeMode` — generic eye-sensing enum (off, reflective, break-beam) in the shared `snapshotpb.common.v1` package, reusable by any board model. |
 | `*.options` | nanopb field constraints (`max_size`, `max_count`) used to generate fixed-size C structs for the firmware. Keys are fully qualified, e.g. `snapshotpb.v1.DeviceConfig.boot_text`. |
 

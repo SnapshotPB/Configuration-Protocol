@@ -36,5 +36,21 @@ enum AutocockerFireMode {
   // requiring a trigger pull rate of 5 pulls per second or higher at 200ms determination
   // intervals.
   // https://www.nxlpaintball.com/divisional-x-ball-rulebook
+  //
+  // THE USER CANNOT ADJUST THE RULES OF THIS MODE. The board uses the numbers of the rulebook.
+  // Thus `Profile.fire_rate_cap` does not apply in this mode: the limit is always 10.5 BPS
+  // (one ball in 95 ms). The `ramping_custom_*` fields of AutocockerConfig do not apply.
+  // A client must not show those settings as adjustable while this mode is selected.
   AUTOCOCKER_FIRE_MODE_RAMPING_NXL_2026 = 5;
+
+  // Ramping mode with rules that the user sets. The marker fires one shot for each trigger
+  // pull, as SEMI does, until the pull rate arms the ramp. While the ramp is armed and the
+  // trigger is held, the marker fires at a target rate. A release of the trigger stops the
+  // fire.
+  //
+  // `ramping_custom_trigger_pulls`, `ramping_custom_multiplier` and
+  // `ramping_custom_rof_minimum` of AutocockerConfig set the ramp. Those three fields apply
+  // in this mode only. `Profile.fire_rate_cap` is the upper limit of the rate. This mode has
+  // no league limit: the user is responsible for the rules of the field.
+  AUTOCOCKER_FIRE_MODE_CUSTOM_RAMPING = 6;
 }
