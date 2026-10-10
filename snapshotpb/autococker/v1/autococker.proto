@@ -25,10 +25,10 @@ message AutocockerConfig {
   AutocockerFireMode fire_mode = 1;
 
   // Eye (breach ball-detection) sensor type, if any. Eye sensing gates the cocking-open phase
-  // only in fire modes that have one: SEMI, FULL_AUTO, and RAMPING_NXL_2026. It is not used by
-  // MECHANICAL (the breach is held open by the trigger, not a timed dwell) or by TRIGGER_ONLY
-  // (no cocking phase at all). See `cocking_solenoid_timeout` for the anti-jam bound applied to
-  // the eye-active open phase.
+  // only in fire modes that have one: SEMI, FULL_AUTO, RAMPING_NXL_2026, and CUSTOM_RAMPING. It
+  // is not used by MECHANICAL (the breach is held open by the trigger, not a timed dwell) or by
+  // TRIGGER_ONLY (no cocking phase at all). See `cocking_solenoid_timeout` for the anti-jam
+  // bound applied to the eye-active open phase.
   snapshotpb.common.v1.EyeMode eye_mode = 2;
 
   // Breach eye detection threshold: the eye is considered to see a paintball if the reading is
@@ -56,19 +56,40 @@ message AutocockerConfig {
   // the breach and prevent the next firing cycle. Range 0-99999 (0-9999.9 ms).
   uint32 cocking_solenoid_dwell_closed = 8;
 
-  // The percentage (divided by ten) of increase to the current fire rate once
-  // `rampingCustomTriggerPulls` criteria has been met. ie 3 trigger pulls at a multiplier value of
-  // 25 (250%) will target a fire rate of 7.5 balls per second. Trigger pulls are counted in a
-  // rolling one-second window so fire rate will increase and decrease relative to consistent trigger
-  // rate. Range 0-99999 (a fixed-point scalar, not a time).
+  // THE THREE `ramping_custom_*` FIELDS APPLY IN THE CUSTOM_RAMPING FIRE MODE ONLY. No other
+  // fire mode reads them. RAMPING_NXL_2026 uses the numbers of the rulebook, and the user cannot
+  // adjust them.
+  //
+  // The board counts the trigger pulls in a ROLLING ONE-SECOND WINDOW. That count is the pull
+  // rate, in pulls per second. A pull leaves the count one second after its press. The ramp is
+  // ARMED while the count is `ramping_custom_trigger_pulls` or more.
+  //
+  // While the ramp is armed and the trigger is held, the marker fires automatic shots at the
+  // TARGET RATE. The target rate is the larger of these two values:
+  //   - the pull rate multiplied by `ramping_custom_multiplier`;
+  //   - `ramping_custom_rof_minimum`.
+  // `Profile.fire_rate_cap` is the upper limit of the target rate, and 1.0 BPS is its lower
+  // limit. If the two values are 0, the marker fires no automatic shot.
+  //
+  // Each trigger pull fires one shot, as in SEMI, with the ramp armed or not armed. The target
+  // rate does not delay that shot: `Profile.fire_rate_cap` alone limits it. A release of the
+  // trigger stops the fire, and a held trigger is not a pull.
+
+  // The multiplier of the pull rate, in tenths: 25 is 2.5 times (250%). 3 trigger pulls in the
+  // one-second window at a value of 25 give a target rate of 7.5 balls per second. The count
+  // of pulls goes up and down with the pulls of the user, thus the target rate follows the pull
+  // rate. Range 0-99999 (a fixed-point scalar, not a time). 0 = the pull rate adds nothing, and
+  // `ramping_custom_rof_minimum` alone sets the target rate.
   uint32 ramping_custom_multiplier = 9;
 
-  // The number of trigger pulls required in a one-second window to enter ramping for the following
-  // one second. Range 0-9999.
+  // The number of trigger pulls in the one-second window that arms the ramp. The ramp stays
+  // armed while the window holds that number of pulls, thus it stops in one second or less
+  // after the last pull. Range 0-9999. 0 = the ramp never arms, and the marker fires as in SEMI.
+  // The firmware counts 32 pulls in the window at most, thus a value above 32 also never arms.
   uint32 ramping_custom_trigger_pulls = 10;
 
-  // A minimum rate of fire in ramping mode regardless of trigger pulls in the rolling window.
-  // Range 0-9999 (bps).
+  // The minimum target rate of fire while the ramp is armed, in balls per second. It applies
+  // with each count of pulls that arms the ramp. Range 0-9999 (bps). 0 = no minimum.
   uint32 ramping_custom_rof_minimum = 11;
 
   // The amount of time in tenths of a millisecond the trigger must be pulled to begin a firing
@@ -87,8 +108,8 @@ message AutocockerConfig {
   // never strand the coil energized indefinitely. Range 0-99999 (0-9999.9 ms).
   //
   // Only consulted when `eye_mode` selects a real sensor (REFLECTIVE or BREAK_BEAM) in a fire
-  // mode that has an eye-gated cocking phase: SEMI, FULL_AUTO, and RAMPING_NXL_2026. It is not
-  // used by MECHANICAL or TRIGGER_ONLY (see `eye_mode`).
+  // mode that has an eye-gated cocking phase: SEMI, FULL_AUTO, RAMPING_NXL_2026, and
+  // CUSTOM_RAMPING. It is not used by MECHANICAL or TRIGGER_ONLY (see `eye_mode`).
   //
   // Zero is NOT "disabled". The proto3 default 0 -- and any profile persisted before this field
   // existed -- selects the firmware's built-in safe default ceiling (5000 = 500 ms) rather than an

@@ -55,6 +55,11 @@ message Profile {
   // be artificially adjusted to honor this cap. 0 = uncapped (firmware uses the maximum);
   // otherwise clamped to 10-1000 (1.0-100.0 BPS).
   //
+  // ONE FIRE MODE DOES NOT READ THE CAP. An autococker board in RAMPING_NXL_2026 does not
+  // read this field: the league sets the limit of that mode (10.5 BPS), and the user cannot
+  // adjust it. A client must not show the cap as adjustable while that mode is selected. The
+  // board keeps the stored value, and it applies again when the user selects a different mode.
+  //
   // Factory default is 105 (10.5 BPS), the NXL 2026 ramping limit. A fresh/unset profile must be
   // materialized as 105 by BOTH the app and the firmware -- do not rely on the proto3 zero-value,
   // which means uncapped, not the default.
