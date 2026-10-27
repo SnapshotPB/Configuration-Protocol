@@ -91,6 +91,38 @@ enum BatteryType {
   BATTERY_TYPE_2S_LIPO = 2;
 }
 
+// The bolt actuation order of the marker.
+//
+// It is a BOARD setting, on DeviceConfig, and not a profile setting. Whether a
+// marker is closed-bolt or open-bolt is a property of the marker hardware, so
+// one setting serves all four profile slots.
+//
+// BoltMode applies in cycled fire modes (SEMI, FULL_AUTO, RAMPING_NXL_2026, and
+// CUSTOM_RAMPING). It is not consulted in MECHANICAL (the cocking solenoid
+// follows the trigger directly) or TRIGGER_ONLY (the cocking solenoid is never
+// energized).
+//
+// The zero value is BOLT_MODE_UNSPECIFIED, and not BOLT_MODE_CLOSED, for the
+// same reason as the other enums in this file. A client writes a whole
+// DeviceConfig, so a client that does not know this field sends the zero
+// value. That write must not change the bolt mode of the board.
+enum BoltMode {
+  // Unset. On a write, the board keeps its current bolt mode. In storage, the
+  // board reads this value as BOLT_MODE_CLOSED.
+  BOLT_MODE_UNSPECIFIED = 0;
+
+  // Closed-bolt order (default). At `trigger_debounce_on`, the sear solenoid
+  // energizes immediately for `sear_solenoid_dwell` and the cocking solenoid
+  // waits `cocking_solenoid_delay` before its open/closed cycle.
+  BOLT_MODE_CLOSED = 1;
+
+  // Open-bolt order. At `trigger_debounce_on`, the cocking solenoid begins its
+  // open/closed cycle immediately (ignoring `cocking_solenoid_delay`) and the
+  // sear solenoid waits `sear_solenoid_delay` before energizing for
+  // `sear_solenoid_dwell`.
+  BOLT_MODE_OPEN = 2;
+}
+
 // App-writable device settings — the message clients send to configure the
 // board. Board-owned, read-only fields (device_id, lockout_enabled,
 // supported_profile_count) live on Device instead, so a client write cannot
@@ -188,4 +220,19 @@ message DeviceConfig {
   // materializes BATTERY_TYPE_9V. A record written before this field existed
   // carries no battery type, so it reads as a 9 V cell.
   BatteryType battery_type = 7;
+
+  // The bolt actuation order of the marker. See BoltMode.
+  //
+  // ON A WRITE, OMIT IT, or send BOLT_MODE_UNSPECIFIED, to leave the board's
+  // current bolt mode alone. This is the same rule as `language`,
+  // `screen_brightness`, and `battery_type`.
+  //
+  // The board IGNORES a value outside the enum and keeps its current bolt mode.
+  // It applies the other fields of the message. Read the DeviceConfig back to
+  // see the value the board holds.
+  //
+  // IN STORAGE, BOLT_MODE_UNSPECIFIED means "unset", and the board materializes
+  // BOLT_MODE_CLOSED. A record written before this field existed carries no
+  // bolt mode, so it reads as closed-bolt.
+  BoltMode bolt_mode = 8;
 }
