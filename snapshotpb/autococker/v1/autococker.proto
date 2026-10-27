@@ -14,7 +14,7 @@ package snapshotpb.autococker.v1;
 import "snapshotpb/autococker/v1/fire_mode.proto";
 import "snapshotpb/common/v1/eye_mode.proto";
 
-// Autococker-specific firing mechanics: fire mode, eye sensing, solenoid timing,
+// Autococker-specific firing mechanics: fire mode, bolt mode, eye sensing, solenoid timing,
 // ramping, and trigger debounce.
 //
 // Numeric range notes below are the ranges the firmware enforces (clamps to) at its write
@@ -45,7 +45,10 @@ message AutocockerConfig {
   uint32 sear_solenoid_dwell = 5;
 
   // The amount of time in tenths of a millisecond the cocking solenoid waits after a trigger pull
-  // before energizing. Range 0-99999 (0-9999.9 ms).
+  // before energizing. Ignored when `open_bolt` is active in a cycled fire mode (SEMI, FULL_AUTO,
+  // RAMPING_NXL_2026, CUSTOM_RAMPING), where the cocking solenoid energizes immediately after
+  // `trigger_debounce_on`. The board keeps the stored value across mode changes, and a client must
+  // not show it as adjustable while open-bolt mode is active. Range 0-99999 (0-9999.9 ms).
   uint32 cocking_solenoid_delay = 6;
 
   // The amount of time in tenths of a millisecond the cocking solenoid will energize to open the
@@ -116,4 +119,24 @@ message AutocockerConfig {
   // unbounded wait, so the timeout can never be turned off. This matches the fail-safe-to-timing
   // behaviour used elsewhere in the firing cycle.
   uint32 cocking_solenoid_timeout = 14;
+
+  // The amount of time in tenths of a millisecond the sear solenoid waits after a trigger pull
+  // before energizing when `open_bolt` is active. Ignored in closed-bolt mode (`open_bolt == false`)
+  // and in fire modes that do not use a timed cocking cycle (MECHANICAL, TRIGGER_ONLY), where the
+  // sear solenoid energizes immediately after `trigger_debounce_on`. The board keeps the stored
+  // value across mode changes, and a client must not show it as adjustable while closed-bolt mode
+  // or MECHANICAL / TRIGGER_ONLY is selected. Range 0-99999 (0-9999.9 ms).
+  uint32 sear_solenoid_delay = 15;
+
+  // Bolt actuation order for the firing cycle in SEMI, FULL_AUTO, RAMPING_NXL_2026, and
+  // CUSTOM_RAMPING. Not consulted in MECHANICAL (the cocking solenoid follows the trigger directly)
+  // or TRIGGER_ONLY (the cocking solenoid is never energized); a client must hide this setting in
+  // those two modes while preserving the stored value on write.
+  //   - false (proto3 default): Closed-bolt order. At `trigger_debounce_on`, the sear solenoid
+  //     energizes immediately for `sear_solenoid_dwell` and the cocking solenoid waits
+  //     `cocking_solenoid_delay` before its open/closed cycle.
+  //   - true: Open-bolt order. At `trigger_debounce_on`, the cocking solenoid begins its
+  //     open/closed cycle immediately (ignoring `cocking_solenoid_delay`) and the sear solenoid
+  //     waits `sear_solenoid_delay` before energizing for `sear_solenoid_dwell`.
+  bool open_bolt = 16;
 }
