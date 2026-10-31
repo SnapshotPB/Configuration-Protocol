@@ -18,8 +18,13 @@ enum AutocockerFireMode {
   // for the configured time. The cocking solenoid will turn on while the trigger is pulled and off
   // while the trigger is released. Trigger configuration still applies for determining position.
   // Eye sensing does not apply in this mode: the breach is held open by the trigger, not a timed
-  // dwell, so there is no eye-gated cocking phase. `DeviceConfig.bolt_mode` and
-  // `sear_solenoid_delay` also do not apply in this mode.
+  // dwell, so there is no eye-gated cocking phase.
+  //
+  // `DeviceConfig.bolt_mode` applies. In `BOLT_MODE_OPEN`, the trigger pull energizes the cocking
+  // solenoid first, and the sear energizes after `sear_solenoid_delay` for `sear_solenoid_dwell`.
+  // The cocking solenoid stays on while the trigger is pulled, as in closed bolt. If the trigger is
+  // released before `sear_solenoid_delay` ends, the board cancels the shot: the sear does not
+  // energize, the cocking solenoid turns off, and the board does not count a shot.
   AUTOCOCKER_FIRE_MODE_MECHANICAL = 1;
 
   // Marker fires in a semi automatic fashion firing as quickly as the user pulls the trigger with

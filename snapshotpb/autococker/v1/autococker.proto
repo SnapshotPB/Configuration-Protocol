@@ -51,9 +51,9 @@ message AutocockerConfig {
   uint32 sear_solenoid_dwell = 5;
 
   // The amount of time in tenths of a millisecond the cocking solenoid waits after a trigger pull
-  // before energizing. Ignored when `DeviceConfig.bolt_mode` is `BOLT_MODE_OPEN` in a cycled fire
-  // mode (SEMI, FULL_AUTO, RAMPING_NXL_2026, CUSTOM_RAMPING), where the cocking solenoid energizes
-  // immediately after `trigger_debounce_on`. The board keeps the stored value across mode changes,
+  // before energizing. Ignored when `DeviceConfig.bolt_mode` is `BOLT_MODE_OPEN` in a fire mode
+  // with a cocking solenoid (SEMI, FULL_AUTO, RAMPING_NXL_2026, CUSTOM_RAMPING, MECHANICAL), where
+  // the cocking solenoid energizes immediately after `trigger_debounce_on`. The board keeps the stored value across mode changes,
   // and a client must not show it as adjustable while open-bolt mode is active. Range 0-99999
   // (0-9999.9 ms).
   uint32 cocking_solenoid_delay = 6;
@@ -129,9 +129,9 @@ message AutocockerConfig {
 
   // The amount of time in tenths of a millisecond the sear solenoid waits after a trigger pull
   // before energizing when `DeviceConfig.bolt_mode` is `BOLT_MODE_OPEN`. Ignored in closed-bolt
-  // mode (`BOLT_MODE_CLOSED`) and in fire modes that do not use a timed cocking cycle (MECHANICAL,
-  // TRIGGER_ONLY), where the sear solenoid energizes immediately after `trigger_debounce_on`. The
+  // mode (`BOLT_MODE_CLOSED`) and in TRIGGER_ONLY, where the sear solenoid energizes immediately
+  // after `trigger_debounce_on`. It applies in MECHANICAL: see AUTOCOCKER_FIRE_MODE_MECHANICAL. The
   // board keeps the stored value across mode changes, and a client must not show it as adjustable
-  // while closed-bolt mode or MECHANICAL / TRIGGER_ONLY is selected. Range 0-99999 (0-9999.9 ms).
+  // while closed-bolt mode or TRIGGER_ONLY is selected. Range 0-99999 (0-9999.9 ms).
   uint32 sear_solenoid_delay = 15;
 }

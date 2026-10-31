@@ -97,10 +97,10 @@ enum BatteryType {
 // marker is closed-bolt or open-bolt is a property of the marker hardware, so
 // one setting serves all four profile slots.
 //
-// BoltMode applies in cycled fire modes (SEMI, FULL_AUTO, RAMPING_NXL_2026, and
-// CUSTOM_RAMPING). It is not consulted in MECHANICAL (the cocking solenoid
-// follows the trigger directly) or TRIGGER_ONLY (the cocking solenoid is never
-// energized).
+// BoltMode applies in each fire mode with a cocking solenoid: SEMI, FULL_AUTO,
+// RAMPING_NXL_2026, CUSTOM_RAMPING, and MECHANICAL (see
+// AUTOCOCKER_FIRE_MODE_MECHANICAL for its open-bolt rule). It is not consulted
+// in TRIGGER_ONLY (the cocking solenoid is never energized).
 //
 // The zero value is BOLT_MODE_UNSPECIFIED, and not BOLT_MODE_CLOSED, for the
 // same reason as the other enums in this file. A client writes a whole
