@@ -123,6 +123,42 @@ enum BoltMode {
   BOLT_MODE_OPEN = 2;
 }
 
+// The state of the Bluetooth radio when the board is turned on.
+//
+// It is a BOARD setting, on DeviceConfig. The default is OFF: the radio is off
+// at each boot, and the user turns it on from the board menu. With RESTORE,
+// the board starts the radio in the last state that the user selected.
+//
+// THE LAST STATE is board data. It is not in this protocol, and a client
+// cannot write it. The board records the state that the user requests from
+// the menu, and also the state from a board shell command. It records the
+// requested state, not the state that the radio got to, so a radio that fails
+// to start is tried again at the next boot. A power-down does not record a
+// state. The board records the last state with each value of this setting, so
+// a change to RESTORE uses the true current state.
+//
+// LOCKOUT ALWAYS TURNS THE RADIO OFF. When the user engages lockout, the board
+// turns the radio off and records OFF as the last state. A board that boots
+// with lockout engaged does not start the radio, with each value of this
+// setting. A release of lockout does not start the radio.
+//
+// The zero value is BLUETOOTH_AT_BOOT_UNSPECIFIED, and not
+// BLUETOOTH_AT_BOOT_OFF, for the same reason as the other enums in this file.
+// A client writes a whole DeviceConfig, so a client that does not know this
+// field sends the zero value. That write must not change this setting.
+enum BluetoothAtBoot {
+  // Unset. On a write, the board keeps its current setting. In storage, the
+  // board reads this value as BLUETOOTH_AT_BOOT_OFF.
+  BLUETOOTH_AT_BOOT_UNSPECIFIED = 0;
+
+  // The radio is off at each boot (default).
+  BLUETOOTH_AT_BOOT_OFF = 1;
+
+  // The radio starts in the last state that the user selected, unless lockout
+  // is engaged.
+  BLUETOOTH_AT_BOOT_RESTORE = 2;
+}
+
 // App-writable device settings — the message clients send to configure the
 // board. Board-owned, read-only fields (device_id, lockout_enabled,
 // supported_profile_count) live on Device instead, so a client write cannot
@@ -235,4 +271,19 @@ message DeviceConfig {
   // BOLT_MODE_CLOSED. A record written before this field existed carries no
   // bolt mode, so it reads as closed-bolt.
   BoltMode bolt_mode = 8;
+
+  // The state of the Bluetooth radio at boot. See BluetoothAtBoot.
+  //
+  // ON A WRITE, OMIT IT, or send BLUETOOTH_AT_BOOT_UNSPECIFIED, to leave the
+  // board's current setting alone. This is the same rule as `language`,
+  // `screen_brightness`, `battery_type`, and `bolt_mode`.
+  //
+  // The board IGNORES a value outside the enum and keeps its current setting.
+  // It applies the other fields of the message. Read the DeviceConfig back to
+  // see the value the board holds.
+  //
+  // IN STORAGE, BLUETOOTH_AT_BOOT_UNSPECIFIED means "unset", and the board
+  // materializes BLUETOOTH_AT_BOOT_OFF. A record written before this field
+  // existed carries no setting, so the radio stays off at boot.
+  BluetoothAtBoot bluetooth_at_boot = 9;
 }
