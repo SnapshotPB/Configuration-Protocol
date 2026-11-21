@@ -37,9 +37,20 @@ message AutocockerConfig {
   // bound applied to the eye-active open phase.
   snapshotpb.common.v1.EyeMode eye_mode = 2;
 
-  // Breach eye detection threshold: the eye is considered to see a paintball if the reading is
-  // below this threshold. Stored as a 0-100 percent of the ADC full scale (0 selects the firmware
-  // default of 50%); the firmware scales it to raw ADC counts before the compare.
+  // This field sets the threshold for the breach eye, and the ball rule depends on `eye_mode`:
+  //   - `EYE_MODE_BREAK_BEAM`: the eye sees a ball when the raw sample is at or below the raw
+  //     threshold. The ball blocks the beam, and the level decreases.
+  //   - `EYE_MODE_REFLECTIVE`: the eye sees a ball when the raw sample is above the raw
+  //     threshold. The ball reflects the light, and the level increases.
+  //   - `EYE_MODE_OFF`: the board does not use the eye, and the threshold has no effect.
+  //
+  // This field holds a percent of the full scale of the ADC, from 0 to 100. A value of 0 selects
+  // the firmware default of 50, and a value above 100 becomes 100. The firmware changes the
+  // percent to raw ADC counts with integer division: `raw = pct * 4095 / 100`. The number 4095
+  // is the full scale of the 12-bit ADC, and the firmware compares the raw sample with this raw
+  // value. A client can compare the live eye level in `snapshotpb.v1.EyeStatus` with this
+  // threshold. Use this same integer formula to make sure that the client result agrees with the
+  // board at each count.
   uint32 eye_threshold = 3;
 
   // The amount of time in tenths of a millisecond the eye must be within threshold to determine a

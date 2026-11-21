@@ -7,6 +7,8 @@ on:
       - "buf.yaml"
       - "buf.lock"
       - ".github/workflows/proto.yml"
+      - "testdata/**"
+      - "scripts/**"
 
 permissions:
   contents: read
@@ -28,6 +30,9 @@ jobs:
 
       - name: Lint
         run: buf lint
+
+      - name: Check golden files
+        run: python3 scripts/check_golden.py
 
       - name: Detect breaking changes
         env:
