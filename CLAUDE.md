@@ -17,6 +17,7 @@ its own versioned sub-package (e.g. `snapshotpb.autococker.v1`), and shared type
 - `v1/protocol.proto` — documentation only: why the wire carries bare per-object messages and no envelope.
 - `v1/device.proto` — `Device` board-owned state and the `BoardModel` enum.
 - `v1/device_config.proto` — `DeviceConfig`, the app-writable device settings.
+- `v1/eye_status.proto` — `EyeStatus`, the live level and state of the breach eye, and the `EyeSensorState` enum.
 - `v1/profile.proto` — `Profile`, `Profiles`, and the `board_config` oneof that selects a board model.
 - `autococker/v1/autococker.proto` — `AutocockerConfig`, one arm of `board_config`.
 - `autococker/v1/fire_mode.proto` — `AutocockerFireMode`, autococker fire modes.

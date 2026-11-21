@@ -23,6 +23,7 @@ leaving existing consumers untouched.
 | `v1/device.proto` | `Device` — board-owned, read-only board state (device id, lockout, board model, supported profile count) and the `BoardModel` enum. |
 | `v1/device_config.proto` | `DeviceConfig` — the app-writable device settings (active profile, boot text, display window, menu language, screen brightness, screen-off delay, battery type, bolt mode, Bluetooth at boot) and the `ScreenBrightness`, `BatteryType`, `BoltMode`, and `BluetoothAtBoot` enums. |
 | `v1/language.proto` | `Language` — the language of the board's OWN menu text, named by ISO 639-1 code (`LANGUAGE_EN`, `LANGUAGE_ES`, `LANGUAGE_DE`, `LANGUAGE_FR`). It does not constrain user text; the font pack does. |
+| `v1/eye_status.proto` | `EyeStatus` — the live level and state of the breach eye, and the `EyeSensorState` enum. |
 | `v1/profile.proto` | `Profile` — a user configuration for the marker, plus the `Profiles` collection. Holds the `board_config` oneof (see below). Tags 2 and 5 are reserved: `type` (the deleted `ProfileType`) described the client UI only, and `screen_brightness` moved to `DeviceConfig`. |
 | `autococker/v1/autococker.proto` | `AutocockerConfig` — autococker-specific firing mechanics (fire mode, eye sensing, solenoid timing, ramping, trigger debounce). One arm of `board_config`. Package `snapshotpb.autococker.v1`. |
 | `autococker/v1/fire_mode.proto` | `AutocockerFireMode` — autococker fire-mode enum (mechanical, semi, trigger-only, full-auto, NXL 2026 ramping, custom ramping). The NXL 2026 mode has no adjustable rule: `fire_rate_cap` and the `ramping_custom_*` fields do not apply in it. The `ramping_custom_*` fields apply in the custom ramping mode only. |
@@ -31,10 +32,14 @@ leaving existing consumers untouched.
 
 ### Message model
 
-Each exchange carries exactly ONE of these messages, encoded on its own. There is no
-envelope: every exchange is an Object Transfer Service object selected by name over
-OLCP (`device`, `profiles`, `config`), so the transport already names the payload
-type before its bytes arrive.
+Each exchange carries one bare message with no envelope. For the OTS objects (`Device`,
+`DeviceConfig`, and `Profiles`), the client selects each object by name over OLCP
+(`device`, `profiles`, `config`). The transport names the payload type before the bytes
+arrive.
+
+`EyeStatus` is not an OTS object. The board sends `EyeStatus` as the value of a vendor
+GATT characteristic. The characteristic UUID names the payload, and the value is a bare
+`EyeStatus` message with no envelope.
 
 ```
 Device          // board-owned, read-only (device_id, lockout, model, profile count)
@@ -48,6 +53,8 @@ Profiles        // repeated Profile (max 4)
     ├── generic fields (name, fire_rate_cap, board_auto_off)
     └── oneof board_config
         └── AutocockerConfig   // board-model-specific firing config
+
+EyeStatus       // live status of the breach eye (GATT characteristic, not an OTS object)
 ```
 
 `Device` carries board-owned state the app can only read (`device_id`,
@@ -60,6 +67,23 @@ The two screen fields belong to the **board**, not to a profile. One screen serv
 profile slots, so a per-profile brightness asked the board to hold four answers for one piece
 of glass and changed the brightness under the user at every profile switch. `screen_brightness`
 therefore moved off `Profile` tag 5, which is now reserved.
+
+## Live eye status (GATT)
+
+| Item | Value |
+| --- | --- |
+| Service UUID | `00000010-5350-4221-0000-5350425f4f54` |
+| Characteristic UUID | `00000011-5350-4221-0000-5350425f4f54` |
+| Properties | read, notify |
+| Value | a bare `snapshotpb.v1.EyeStatus` |
+
+- A read gives the current `EyeStatus`.
+- While a client has notifications on (the CCC is set), the board sends `EyeStatus` at approximately 10 Hz. The board sends no notification when no client has notifications on.
+- The board sets the CCC of this characteristic back to 0 at each disconnect, also for a bonded client. A client turns notifications on again after each connect.
+- A client turns notifications on only while it shows the value, because the notifications use power and radio time.
+- The board does not turn on the emitter for a client. The state tells the client why there is no level.
+- A board with older firmware does not have this service. In that case, a client shows no level, and all other functions work.
+- These UUIDs use the same vendor base as the OTS vendor UUIDs `00000001-…` (device object type) and `00000002-…` (object data).
 
 ## Open approach to board types
 

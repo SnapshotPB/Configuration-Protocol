@@ -1,0 +1,60 @@
+// Configuration Protocol © 2026 Snapshot PB
+// SPDX-License-Identifier: MPL-2.0
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// Live status of the breach eye sensor.
+
+syntax = "proto3";
+
+package snapshotpb.v1;
+
+// This message holds the live status of the breach eye sensor. The board sends it as the value of
+// the eye status characteristic (`00000011-5350-4221-0000-5350425f4f54`). Refer to the
+// `Live eye status (GATT)` section of `README.md` for the GATT details.
+//
+// It is a value of the sensor, not of a profile. A client can compare `level_raw` with the
+// `eye_threshold` of any profile, also an edited profile that is not saved or not active. This
+// message has no active profile field, because a client reads the active profile from
+// `DeviceConfig.active_profile`.
+message EyeStatus {
+  // This field holds the last raw sample of the eye ADC, from 0 to `full_scale_raw`. It has
+  // presence because 0 is a valid level. The board sets it only in the `EYE_SENSOR_STATE_ACTIVE`
+  // state. In that state, the board omits it until the first sample after the settle time of the
+  // emitter. A client shows no level when the board omits this field.
+  optional uint32 level_raw = 1;
+
+  // This field holds the raw value of the full scale of the ADC (4095 for the 12-bit ADC). A
+  // client uses it to change `level_raw` to a percent. A client also uses it to change
+  // `eye_threshold` to raw counts with `eye_threshold * full_scale_raw / 100`. The firmware uses
+  // that same integer division. Refer to `snapshotpb.autococker.v1.AutocockerConfig.eye_threshold`
+  // for the ball rule of each eye mode.
+  uint32 full_scale_raw = 2;
+
+  // This field holds the current state of the eye sensor. Refer to `EyeSensorState`.
+  EyeSensorState state = 3;
+}
+
+// This enum gives the state of the breach eye sensor. The board selects the FIRST state in this
+// order that is true: `FAULT`, then `EYE_OFF`, then `OVERRIDE_OFF`, then `ACTIVE`. Therefore, a
+// client hint names the first condition that the user must change. A client ignores an unknown
+// state value and shows no level for it, because a newer board can add a state.
+enum EyeSensorState {
+  // Unset or unknown state. A client shows no level.
+  EYE_SENSOR_STATE_UNSPECIFIED = 0;
+
+  // The emitter is on, and the board reads the eye.
+  EYE_SENSOR_STATE_ACTIVE = 1;
+
+  // The active profile of the board has the eye mode `EYE_MODE_OFF`. The emitter is off.
+  EYE_SENSOR_STATE_EYE_OFF = 2;
+
+  // The user turned the eyes off on the board (a long push of UP on the home screen). The board
+  // does not save this override, and the eyes are on again after each boot.
+  EYE_SENSOR_STATE_OVERRIDE_OFF = 3;
+
+  // The eye channel latched a fault because the ADC channel is absent or not ready. The eye stays
+  // off until the next boot.
+  EYE_SENSOR_STATE_FAULT = 4;
+}

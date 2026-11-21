@@ -25,6 +25,10 @@ package snapshotpb.v1;
 // channel is a faster DATA plane for the object's bytes; the OACP/OLCP control
 // plane does not move with it. A client picks the object the same way either way.
 //
+// The live eye status (`eye_status.proto`) is the value of its own GATT
+// characteristic, not an OTS object. The characteristic UUID names the payload,
+// and its value is also a bare message with no envelope.
+//
 // So the wire carries a BARE message -- Device, Profiles or DeviceConfig encoded on
 // its own. The firmware and every client exchange that format, and always have.
 //
