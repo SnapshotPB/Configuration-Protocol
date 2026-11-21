@@ -1,0 +1,41 @@
+{
+  "message": "snapshotpb.v1.EyeStatus",
+  "proto": "snapshotpb/v1/eye_status.proto",
+  "cases": [
+    {
+      "name": "active_level_0",
+      "fields": { "level_raw": 0, "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_ACTIVE" },
+      "hex": "080010ff1f1801"
+    },
+    {
+      "name": "active_level_4095",
+      "fields": { "level_raw": 4095, "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_ACTIVE" },
+      "hex": "08ff1f10ff1f1801"
+    },
+    {
+      "name": "active_no_level",
+      "fields": { "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_ACTIVE" },
+      "hex": "10ff1f1801"
+    },
+    {
+      "name": "eye_off",
+      "fields": { "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_EYE_OFF" },
+      "hex": "10ff1f1802"
+    },
+    {
+      "name": "override_off",
+      "fields": { "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_OVERRIDE_OFF" },
+      "hex": "10ff1f1803"
+    },
+    {
+      "name": "fault",
+      "fields": { "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_FAULT" },
+      "hex": "10ff1f1804"
+    },
+    {
+      "name": "unspecified",
+      "fields": { "full_scale_raw": 4095, "state": "EYE_SENSOR_STATE_UNSPECIFIED" },
+      "hex": "10ff1f"
+    }
+  ]
+}
