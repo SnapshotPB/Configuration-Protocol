@@ -23,11 +23,12 @@ its own versioned sub-package (e.g. `snapshotpb.autococker.v1`), and shared type
 - `autococker/v1/fire_mode.proto` — `AutocockerFireMode`, autococker fire modes.
 - `common/v1/eye_mode.proto` — `EyeMode`, a generic eye-sensing enum reusable by any board model.
 - `*.options` — nanopb field constraints (`max_size`, `max_count`) for fixed-size C structs.
+- `testdata/*.json` and `scripts/check_golden.py` (at repository root) — golden protobuf test files and their check script.
 
 ## Conventions
 
-The schema is held to buf `STANDARD` lint and `FILE`-level breaking checks
-(`buf.yaml`), run on PRs by `.github/workflows/proto.yml`. When editing:
+The schema is held to buf `STANDARD` lint, `FILE`-level breaking checks (`buf.yaml`), and
+`python3 scripts/check_golden.py`, run on PRs by `.github/workflows/proto.yml`. When editing:
 
 - Core files declare `package snapshotpb.v1;`; each board model uses its own versioned
   sub-package (`package snapshotpb.<model>.v1;`) and shared types live in
@@ -43,6 +44,8 @@ The schema is held to buf `STANDARD` lint and `FILE`-level breaking checks
   `BoardModel` value in `device.proto` (see the README's "adding a board type" example).
 - Bounded `bytes`/`string`/`repeated` fields must have a matching nanopb constraint in
   the corresponding `*.options` file so the firmware gets fixed-size structs.
+- When you change a message with a golden file in `testdata/`, run
+  `python3 scripts/check_golden.py --update`. Review the new hex bytes after the update.
 - **`v1` is pre-release and unstable.** Until the first tagged release, fields may be
   renumbered and messages reshaped freely to keep the schema clean; `buf breaking` is
   expected to fail on these and the failure is informational (merge anyway). Once `v1` is

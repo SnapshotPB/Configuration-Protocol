@@ -199,6 +199,20 @@ The schema follows [buf](https://buf.build) `STANDARD` lint rules. When editing:
   enum name, e.g. `FIRE_MODE_UNSPECIFIED = 0; FIRE_MODE_MECHANICAL = 1;`.
 - `.options` keys are fully qualified with the package.
 
+## Golden files
+
+The C firmware, the Rust firmware, and the client apps test their encode and decode against the golden files in `testdata/`. A real protobuf encoder (`buf convert`) creates the bytes, and all implementations agree on the wire format. `testdata/eye_status.json` holds the test cases of `EyeStatus`.
+
+Each golden file is a JSON object with the keys `message`, `proto`, and `cases`. `message` names the protobuf message, `proto` gives the path to the `.proto` file, and `cases` holds the test cases. Each case has three keys:
+
+- `name`: a unique non-empty case name.
+- `fields`: the protojson form of the message, with `snake_case` proto field names and each enum value by its name. An absent key is a field that is not set.
+- `hex`: the encoded bytes in lowercase hex, with no spaces and no `0x` prefix.
+
+To add a case, add a new entry with `name` and `fields` to the file. Run `python3 scripts/check_golden.py --update` to write the `hex` value. Examine the new `hex` value to confirm that it matches the expected wire format.
+
+A client test must check both directions. It must decode `hex` and compare the result with `fields`. It must also encode `fields` and compare the bytes with `hex`.
+
 ## Validation / CI
 
 Pull requests that touch protos are validated by the [`Proto`](.github/workflows/proto.yml)
@@ -206,6 +220,7 @@ GitHub Action, which runs:
 
 - `buf build` — confirms the protos compile and imports resolve.
 - `buf lint` — enforces the `STANDARD` ruleset above.
+- `python3 scripts/check_golden.py` — checks each golden file in `testdata/` against `buf convert`.
 - `buf breaking` — compares against the PR's base branch and **fails the build on any
   source-breaking change** (field renames, type changes, deletions, renumbering).
 
@@ -214,6 +229,7 @@ To run the same checks locally:
 ```sh
 buf build
 buf lint
+python3 scripts/check_golden.py
 buf breaking --against '.git#branch=main'
 ```
 
